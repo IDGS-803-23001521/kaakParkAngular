@@ -1,0 +1,99 @@
+<app-navbar></app-navbar>
+<div class="page-bg page-bg-gears">
+  <div class="usuarios-grid">
+
+    <div class="usuarios-left">
+      <div class="card-kaak">
+        <h5>Usuarios Activos</h5>
+        <div style="display:grid;grid-template-columns:2fr 1.5fr 1fr 1fr;font-size:0.73rem;color:#888;font-weight:600;padding:0 0 8px 0;border-bottom:1px solid #eee;margin-bottom:4px;">
+          <span style="padding-left:34px;">Nombre</span><span>Puesto</span>
+          <span style="text-align:center;">Credenciales</span><span style="text-align:center;">Inactivar</span>
+        </div>
+        <div *ngFor="let u of activos" class="usuario-fila">
+          <div style="display:flex;align-items:center;gap:8px;flex:2;">
+            <img src="assets/images/UsuarioA.png" style="width:26px;height:26px;" alt=""/>
+            <strong style="font-size:0.86rem;color:#222;">{{u.nombre}}</strong>
+          </div>
+          <span style="flex:1.5;font-size:0.83rem;color:#555;">{{u.puesto}}</span>
+          <div style="flex:1;text-align:center;"><button class="btn-cred" (click)="generarCredenciales(u)">🔑 Credenciales</button></div>
+          <div style="flex:1;text-align:center;"><button class="toggle-btn" (click)="inactivarUsuario(u)">✓</button></div>
+        </div>
+        <div *ngIf="activos.length===0" style="text-align:center;color:#aaa;padding:1rem;font-size:0.85rem;">Sin usuarios activos</div>
+      </div>
+
+      <div class="card-kaak">
+        <h5>Usuarios Inactivos</h5>
+        <div style="display:grid;grid-template-columns:2fr 2fr 1fr;font-size:0.73rem;color:#888;font-weight:600;padding:0 0 8px 0;border-bottom:1px solid #eee;margin-bottom:4px;">
+          <span style="padding-left:34px;">Nombre</span><span>Puesto</span><span style="text-align:center;">Activar</span>
+        </div>
+        <div *ngFor="let u of inactivos" class="usuario-fila-inactivo">
+          <div style="display:flex;align-items:center;gap:8px;flex:2;">
+            <img src="assets/images/UsuarioA.png" style="width:26px;height:26px;opacity:0.45;" alt=""/>
+            <strong style="font-size:0.86rem;color:#555;">{{u.nombre}}</strong>
+          </div>
+          <span style="flex:2;font-size:0.83rem;color:#888;">{{u.puesto}}</span>
+          <div style="flex:1;text-align:center;"><button class="toggle-btn-inactivo" (click)="activarUsuario(u)">✓</button></div>
+        </div>
+        <div *ngIf="inactivos.length===0" style="text-align:center;color:#aaa;padding:1rem;font-size:0.85rem;">Sin usuarios inactivos</div>
+      </div>
+    </div>
+
+    <div class="card-kaak form-usuario">
+      <h5>+ Agregar Usuario</h5>
+      <input type="text" placeholder="Nombre" [(ngModel)]="fNombre"/>
+      <input type="text" placeholder="Apellido Paterno" [(ngModel)]="fApPat"/>
+      <input type="text" placeholder="Apellido Materno" [(ngModel)]="fApMat"/>
+      <select [(ngModel)]="fPuesto" style="margin-bottom:0.75rem;">
+        <option value="">Puesto</option>
+        <option value="Administrador">Administrador</option>
+        <option value="Encargado">Encargado</option>
+        <option value="Guardia de seguridad">Guardia de seguridad</option>
+        <option value="Mantenimiento">Mantenimiento</option>
+      </select>
+      <div class="radio-group">
+        <span style="font-size:0.88rem;color:#333;margin-right:0.5rem;">Sexo</span>
+        <label><input type="radio" name="sexo" value="M" [(ngModel)]="fSexo"/> M</label>
+        <label><input type="radio" name="sexo" value="F" [(ngModel)]="fSexo"/> F</label>
+      </div>
+      <div style="margin-bottom:0.75rem;">
+        <label style="font-size:0.8rem;color:#555;display:block;margin-bottom:4px;">Fecha de nacimiento</label>
+        <input type="date" [(ngModel)]="fFecha" style="width:100%;background:#f3f3f3;border:1px solid #e0e0e0;border-radius:8px;padding:10px 14px;font-size:0.88rem;color:#333;outline:none;"/>
+      </div>
+      <div style="margin-bottom:1rem;">
+        <label style="font-size:0.8rem;color:#555;display:block;margin-bottom:4px;">Fotografía</label>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:52px;height:52px;border-radius:50%;background:#eee;border:2px solid #ddd;overflow:hidden;flex-shrink:0;cursor:pointer;" (click)="fotoInput.click()">
+            <img [src]="fotoPreview" style="width:100%;height:100%;object-fit:cover;"/>
+          </div>
+          <button type="button" (click)="fotoInput.click()" style="padding:8px 16px;background:#f3f3f3;border:1px solid #ddd;border-radius:8px;font-size:0.82rem;color:#555;cursor:pointer;">
+            Seleccionar foto
+          </button>
+          <input #fotoInput type="file" accept="image/*" style="display:none;" (change)="previsualizarFoto($event)"/>
+        </div>
+      </div>
+      <div class="form-btns">
+        <button class="btn-cancelar" (click)="limpiarForm()">Cancelar</button>
+        <button class="btn-guardar"  (click)="guardarUsuario()">Guardar</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div *ngIf="mostrarModal" style="display:flex;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:2rem;width:380px;box-shadow:0 8px 40px rgba(0,0,0,0.4);text-align:center;">
+    <div style="font-size:1.8rem;margin-bottom:0.5rem;">🔑</div>
+    <h5 style="margin-bottom:0.25rem;color:#111;">Credenciales generadas</h5>
+    <p style="font-size:0.78rem;color:#888;margin-bottom:1.5rem;">Guarda esta información, la contraseña no se volverá a mostrar.</p>
+    <div style="background:#f8f8f8;border-radius:10px;padding:1rem;margin-bottom:1rem;text-align:left;">
+      <div style="font-size:0.8rem;color:#888;margin-bottom:4px;">Usuario</div>
+      <div style="font-size:1rem;font-weight:700;color:#111;margin-bottom:0.75rem;">{{credUsuario}}</div>
+      <div style="font-size:0.8rem;color:#888;margin-bottom:4px;">Contraseña temporal</div>
+      <div style="font-size:1rem;font-weight:700;color:#C9A227;letter-spacing:2px;font-family:monospace;">{{credPass}}</div>
+    </div>
+    <p style="font-size:0.75rem;color:#aaa;margin-bottom:1.5rem;">{{credNota}}</p>
+    <button (click)="cerrarModal()" style="width:100%;padding:11px;background:#C9A227;color:#111;border:none;border-radius:8px;font-weight:700;font-size:0.95rem;cursor:pointer;">
+      Entendido
+    </button>
+  </div>
+</div>

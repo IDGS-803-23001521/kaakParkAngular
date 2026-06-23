@@ -1,0 +1,135 @@
+<app-navbar></app-navbar>
+<div class="page-bg page-bg-gears">
+  <div class="cajones-layout">
+
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+      <div class="card-kaak">
+        <h5>Resumen de cajones por nivel</h5>
+        <div style="display:flex;gap:2rem;align-items:stretch;min-height:320px;">
+
+          <div class="estructura-elevador" style="flex:0 0 auto;align-self:stretch;">
+            <div class="estructura-col" style="flex:1;">
+              <div *ngFor="let nv of niveles" class="struct-cell" [ngClass]="getEstadoClass(getCajon(nv,1)?.estado || 'Libre')" style="flex:1;">
+                Nivel {{nv}}<br/>Cajón 1
+              </div>
+              <div class="struct-cell plataforma" style="flex:0 0 36px;"></div>
+            </div>
+            <div class="estructura-col elevador-col">
+              <span>E<br/>L<br/>E<br/>V<br/>A<br/>D<br/>O<br/>R</span>
+              <span style="margin-top:auto;font-size:0.6rem;">Plataforma</span>
+            </div>
+            <div class="estructura-col" style="flex:1;">
+              <div *ngFor="let nv of niveles" class="struct-cell" [ngClass]="getEstadoClass(getCajon(nv,2)?.estado || 'Libre')" style="flex:1;">
+                Nivel {{nv}}<br/>Cajón 2
+              </div>
+              <div class="struct-cell plataforma" style="flex:0 0 36px;"></div>
+            </div>
+          </div>
+
+          <div style="flex:1;display:flex;flex-direction:column;justify-content:space-between;padding:4px 0;">
+            <div *ngFor="let nv of niveles" class="nivel-section" style="margin-bottom:0;">
+              <div class="nivel-label">Nivel {{nv}}</div>
+              <div class="nivel-btns">
+                <button *ngFor="let cj of getCajonesDeNivel(nv)" class="btn-nivel" [ngClass]="getEstadoClass(cj.estado)">
+                  Cajón {{cj.numeroCajon}} — {{cj.estado}}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-kaak">
+        <h5>Detalle de Cajones</h5>
+        <table class="cajones-table">
+          <thead><tr><th>Nivel</th><th>Cajón</th><th>Estado</th><th>Placa</th><th>Hora Entrada</th><th>Acciones</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let cj of cajones">
+              <td>{{cj.nivel}}</td>
+              <td>{{cj.numeroCajon}}</td>
+              <td>
+                <span class="badge" [class.badge-libre]="cj.estado==='Libre'"
+                  [class.badge-ocupado]="cj.estado==='Ocupado'"
+                  [class.badge-mantenimiento]="cj.estado==='Mantenimiento'">{{cj.estado}}</span>
+              </td>
+              <td>{{cj.placa || '—'}}</td>
+              <td>{{cj.horaEntrada || '—'}}</td>
+              <td>
+                <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                  <button class="btn-accion btn-accion-ocupar"
+                    [disabled]="cj.estado==='Ocupado'"
+                    [class.inactivo]="cj.estado==='Ocupado'"
+                    (click)="ocupar(cj)">Ocupar</button>
+                  <button class="btn-accion btn-accion-libre"
+                    [disabled]="cj.estado!=='Ocupado'"
+                    [class.inactivo]="cj.estado!=='Ocupado'"
+                    (click)="desocupar(cj)">Desocupar</button>
+                  <button class="btn-accion btn-accion-mant"
+                    [disabled]="cj.estado==='Ocupado'"
+                    [class.inactivo]="cj.estado==='Ocupado'"
+                    [class.mant-activo]="cj.estado==='Mantenimiento'"
+                    (click)="toggleMantenimiento(cj)">
+                    {{cj.estado==='Mantenimiento' ? '↩ Reactivar' : 'Mant.'}}
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+      <div class="card-kaak" style="text-align:center;">
+        <h5 style="text-align:left;">Capacidad Total</h5>
+        <div style="display:flex;justify-content:center;margin:0.5rem 0;">
+          <canvas #donutCapCanvas width="180" height="180"></canvas>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:0.75rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;background:#f8f8f8;border-radius:8px;padding:8px 14px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="width:14px;height:14px;border-radius:50%;background:#1a1a1a;display:inline-block;"></span>
+              <span style="font-size:0.85rem;color:#333;">Ocupado</span>
+            </div>
+            <span style="font-weight:700;color:#111;">{{totalOcupados}} / {{totalCajones}}</span>
+            <span style="font-size:0.82rem;color:#1a1a1a;font-weight:700;">{{pctOcupado}}%</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;background:#f8f8f8;border-radius:8px;padding:8px 14px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="width:14px;height:14px;border-radius:50%;background:#aaa;display:inline-block;"></span>
+              <span style="font-size:0.85rem;color:#333;">Libre</span>
+            </div>
+            <span style="font-weight:700;color:#111;">{{totalLibres}} / {{totalCajones}}</span>
+            <span style="font-size:0.82rem;color:#888;font-weight:700;">{{pctLibre}}%</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;background:#f8f8f8;border-radius:8px;padding:8px 14px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="width:14px;height:14px;border-radius:50%;background:#C9A227;display:inline-block;"></span>
+              <span style="font-size:0.85rem;color:#333;">Mantenimiento</span>
+            </div>
+            <span style="font-weight:700;color:#111;">{{totalMantenimiento}} / {{totalCajones}}</span>
+            <span style="font-size:0.82rem;color:#C9A227;font-weight:700;">—</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-kaak">
+        <h5>Tiempo promedio de ocupación</h5>
+        <div style="text-align:center;padding:0.5rem 0 1rem;">
+          <div style="font-size:2.4rem;font-weight:800;color:#111;line-height:1;">{{tiempoPromedioOcupacion}}</div>
+          <div style="font-size:0.72rem;color:#888;margin-top:4px;">promedio actual de estancia</div>
+        </div>
+        <div *ngFor="let c of cajonesOcupadosConTiempo"
+          style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #f0f0f0;font-size:0.82rem;">
+          <span style="font-weight:700;color:#333;">N{{c.nivel}} · C{{c.numeroCajon}}</span>
+          <span style="color:#aaa;font-size:0.72rem;">desde {{c.horaEntrada}}</span>
+          <span style="font-weight:700;color:var(--gold);">{{formatTiempo(c.tiempoMin)}}</span>
+        </div>
+        <div *ngIf="cajonesOcupadosConTiempo.length===0"
+          style="text-align:center;color:#bbb;padding:1rem;font-size:0.83rem;">
+          Sin cajones ocupados con registro de hora
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

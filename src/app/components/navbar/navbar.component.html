@@ -1,0 +1,26 @@
+<nav class="navbar-kaak">
+  <div class="nav-left"></div>
+  <div class="nav-center">
+    <a routerLink="/dashboard" [class.active]="isActive('/dashboard')">
+      <img src="assets/images/DashB.png" alt=""/> Dashboard
+    </a>
+    <a routerLink="/cajones" [class.active]="isActive('/cajones')">
+      <img src="assets/images/CajonPB.png" alt=""/> Cajones
+    </a>
+    <div class="nav-logo-center">
+      <img src="assets/images/Logo.png" alt="K'áaxPark"/>
+    </div>
+    <a routerLink="/reportes" [class.active]="isActive('/reportes')">
+      <img src="assets/images/GraficoB.png" alt=""/> Reportes y Analítica
+    </a>
+    <a routerLink="/sustentabilidad" [class.active]="isActive('/sustentabilidad')">
+      <img src="assets/images/SosteB.png" alt=""/> Sustentabilidad
+    </a>
+  </div>
+  <div class="nav-right">
+    <a routerLink="/usuarios" class="nav-avatar-btn" [class.active-avatar]="isActive('/usuarios')">
+      <span class="nav-plus">+</span>
+      <img src="assets/images/avatar.png" alt="Admin"/>
+    </a>
+  </div>
+</nav>

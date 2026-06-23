@@ -1,0 +1,22 @@
+<div class="login-page" style="background-image: url('assets/images/FONDO_LOGIN.png');">
+  <div class="login-card">
+    <div class="login-title">
+      <h2>K'áax<span class="gold">Park</span></h2>
+    </div>
+    <div class="alert-error" *ngIf="error">{{ error }}</div>
+    <div class="input-group-kaak">
+      <img class="icon" src="assets/images/UsuarioD.png" alt=""/>
+      <input type="email" placeholder="Correo electrónico" [(ngModel)]="email" autocomplete="off"/>
+    </div>
+    <div class="input-group-kaak">
+      <img class="icon" src="assets/images/candado.png" alt=""/>
+      <input [type]="showPassword ? 'text' : 'password'" placeholder="Contraseña" [(ngModel)]="password"/>
+      <button type="button" class="eye-btn" (click)="togglePassword()">
+        <img src="assets/images/Ojo.png" alt="ver"/>
+      </button>
+    </div>
+    <button class="btn-gold" style="margin-top:0.5rem;" (click)="onLogin()" [disabled]="loading">
+      <em>{{ loading ? 'Iniciando...' : 'Iniciar Sesión' }}</em>
+    </button>
+  </div>
+</div>

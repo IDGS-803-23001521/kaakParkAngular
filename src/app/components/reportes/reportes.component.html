@@ -1,0 +1,80 @@
+<app-navbar></app-navbar>
+<div class="page-bg page-bg-gears">
+  <div class="reportes-grid">
+
+    <div class="reportes-left">
+      <div class="card-kaak form-kaak">
+        <h5>Generador de reportes</h5>
+        <label>Período</label>
+        <select [(ngModel)]="periodo" style="margin-bottom:1rem;">
+          <option value="7d">Últimos 7 días</option>
+          <option value="1m">Último mes</option>
+          <option value="3m">Últimos 3 meses</option>
+          <option value="6m">Últimos 6 meses</option>
+          <option value="1y">Último año</option>
+        </select>
+        <div class="form-grid-2">
+          <div>
+            <label>Módulo</label>
+            <select [(ngModel)]="modulo">
+              <option value="general">General (todo)</option>
+              <option value="dashboard">Dashboard</option>
+              <option value="cajones">Cajones</option>
+              <option value="sustentabilidad">Sustentabilidad</option>
+            </select>
+          </div>
+          <div>
+            <label>Nivel</label>
+            <select [(ngModel)]="nivel">
+              <option value="todos">Todos</option>
+              <option value="1">Nivel 1</option>
+              <option value="2">Nivel 2</option>
+              <option value="3">Nivel 3</option>
+              <option value="4">Nivel 4</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn-gold" (click)="generarReporte()">Generar reporte</button>
+      </div>
+      <div class="card-kaak">
+        <h5>Tendencias clave (Año actual)</h5>
+        <canvas #lineChartCanvas height="160"></canvas>
+      </div>
+    </div>
+
+    <div class="reportes-right">
+      <div class="card-kaak">
+        <h5>Métricas clave del mes anterior</h5>
+        <div style="display:flex;flex-direction:column;gap:1rem;">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:0.75rem;">
+            <canvas #donutMetricasCanvas width="160" height="160"></canvas>
+            <div style="display:flex;gap:1.2rem;justify-content:center;flex-wrap:wrap;">
+              <div style="display:flex;align-items:center;gap:5px;font-size:0.8rem;">
+                <span style="width:10px;height:10px;border-radius:50%;background:#C9A227;display:inline-block;"></span> Ocupación: 65%
+              </div>
+              <div style="display:flex;align-items:center;gap:5px;font-size:0.8rem;">
+                <span style="width:10px;height:10px;border-radius:50%;background:#aaa;display:inline-block;"></span> Estancia &lt;1h: 30%
+              </div>
+              <div style="display:flex;align-items:center;gap:5px;font-size:0.8rem;">
+                <span style="width:10px;height:10px;border-radius:50%;background:#333;display:inline-block;"></span> Estancia 1-3h: 5%
+              </div>
+            </div>
+          </div>
+          <div style="border-top:1px solid #eee;padding-top:0.75rem;">
+            <div style="font-size:0.75rem;font-weight:700;color:#555;margin-bottom:8px;text-align:center;">Uso por Nivel</div>
+            <canvas #barNivelCanvas height="90"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="card-kaak">
+        <h5>Historial de reportes generados</h5>
+        <div *ngFor="let r of historial" class="historial-item">
+          <div><div class="hi-name">{{r.nombre}}</div><div class="hi-fecha">{{r.fecha}}</div></div>
+          <button class="btn-descargar" (click)="descargarReporte(r.nombre)">⬇</button>
+        </div>
+        <div *ngIf="historial.length===0" style="text-align:center;color:#aaa;padding:1rem;font-size:0.85rem;">Sin reportes generados</div>
+      </div>
+    </div>
+
+  </div>
+</div>

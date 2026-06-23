@@ -1,0 +1,101 @@
+<app-navbar></app-navbar>
+<div class="page-bg page-bg-gears">
+  <div class="sust-grid">
+
+    <div class="sust-left">
+      <div class="card-kaak">
+        <h5>Panel de Sustentabilidad en Tiempo Real</h5>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:center;">
+          <div>
+            <div style="font-size:0.82rem;color:#555;margin-bottom:10px;">Consumo de Agua Pluvial</div>
+            <div style="display:flex;align-items:center;gap:1rem;">
+              <canvas #donutAguaCanvas width="110" height="110" style="flex-shrink:0;"></canvas>
+              <div style="font-size:0.78rem;color:#555;">
+                <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;"><span style="width:10px;height:10px;border-radius:50%;background:#0c141a;display:inline-block;"></span> Grises</div>
+                <div style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:50%;background:#ccc;display:inline-block;"></span> Disponible</div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:0.82rem;color:#555;margin-bottom:10px;">Generación Solar</div>
+            <div style="display:flex;align-items:center;gap:1rem;">
+              <canvas #donutSolarCanvas width="110" height="110" style="flex-shrink:0;"></canvas>
+              <div style="font-size:0.78rem;color:#555;">
+                <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;"><span style="width:10px;height:10px;border-radius:50%;background:#C9A227;display:inline-block;"></span> Solar</div>
+                <div style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:50%;background:#ccc;display:inline-block;"></span> Disponible</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="estado-sistema" style="margin-top:1.5rem;">
+          <div style="font-size:0.82rem;font-weight:700;color:#333;margin-bottom:6px;">Estado del Sistema</div>
+          <div class="estado-row">
+            <span>Bomba de Agua</span>
+            <div class="estado-btns">
+              <button class="btn-on-off" [class.btn-on]="data.bombaAgua" [class.btn-off]="!data.bombaAgua" (click)="toggleBomba(true)">ON</button>
+              <button class="btn-on-off" [style.background]="data.bombaAgua ? '#555' : '#E53935'" style="color:#fff;" (click)="toggleBomba(false)">OFF</button>
+              <span style="font-weight:700;" [style.color]="data.bombaAgua ? '#C9A227' : '#E53935'">{{data.bombaAgua ? 'ON' : 'OFF'}}</span>
+            </div>
+          </div>
+          <div class="estado-row">
+            <span>Energía Generada</span>
+            <strong style="color:#C9A227;">{{data.energiaGeneradaKwh}} kWh</strong>
+          </div>
+          <div class="estado-row">
+            <span>Nivel del Tanque</span>
+            <strong style="color:#0c141a;">{{data.nivelTanque}}%</strong>
+          </div>
+        </div>
+
+        <div style="margin-top:1rem;" *ngIf="data.alertas?.length">
+          <div style="font-size:0.82rem;font-weight:700;color:#E53935;margin-bottom:6px;">⚠ Alertas</div>
+          <div *ngFor="let alerta of data.alertas"
+               style="background:#fff3e0;border-left:3px solid #FFA726;border-radius:4px;padding:6px 10px;margin-bottom:6px;font-size:0.8rem;color:#bf6a02;">
+            {{alerta}}
+          </div>
+        </div>
+      </div>
+
+      <div class="card-kaak">
+        <h5>Tendencias de Generación Solar (Semana Actual)</h5>
+        <canvas #lineSolarCanvas height="130"></canvas>
+      </div>
+    </div>
+
+    <div class="sust-right">
+      <div class="card-kaak">
+        <h5>Resumen de Huella de Carbono y Ahorros</h5>
+        <div style="display:flex;gap:1rem;align-items:flex-start;margin-bottom:1rem;">
+          <canvas #donutHuellaCanvas width="130" height="130" style="flex-shrink:0;"></canvas>
+          <div style="flex:1;font-size:0.72rem;color:#444;">
+            <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#C9A227;display:inline-block;"></span> Gasto Eléctrico</div>
+            <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#ccc;display:inline-block;"></span> Ahorro Solar</div>
+            <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#888;display:inline-block;"></span> Huella Red</div>
+            <div style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#333;display:inline-block;"></span> Total Emisiones</div>
+          </div>
+        </div>
+        <div style="height:120px;"><canvas #barHuellaCanvas></canvas></div>
+      </div>
+
+      <div class="card-kaak">
+        <h5>Resumen de Agua Pluvial</h5>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;background:#fffef0;border-radius:8px;padding:10px 14px;">
+            <span style="font-size:0.85rem;color:#333;">Agua Captada</span>
+            <strong style="color:#0c141a;">{{data.aguaCaptadaLitros}} L</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;background:#fffef0;border-radius:8px;padding:10px 14px;">
+            <span style="font-size:0.85rem;color:#333;">Usada para Riego</span>
+            <strong style="color:#0c141a;">{{data.aguaUsadaRiego}} L</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;background:#fffef0;border-radius:8px;padding:10px 14px;">
+            <span style="font-size:0.85rem;color:#333;">Disponible</span>
+            <strong style="color:#0c141a;">{{data.aguaCaptadaLitros - data.aguaUsadaRiego}} L</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
