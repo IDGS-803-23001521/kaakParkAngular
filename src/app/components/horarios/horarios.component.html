@@ -1,0 +1,23 @@
+<app-navbar></app-navbar>
+<div class="page-bg page-bg-gears">
+  <div style="max-width:720px;margin:2rem auto;padding:0 1rem;">
+
+    <div class="card-kaak" style="margin-bottom:1.5rem;">
+      <h5>Horario de Operación</h5>
+      <p style="color:#888;font-size:0.85rem;margin-top:-8px;">
+        Consulta los horarios de apertura y cierre de K'áaxPark.
+      </p>
+    </div>
+
+    <div class="card-kaak">
+      <div *ngFor="let d of dias"
+           style="display:flex;justify-content:space-between;align-items:center;padding:14px 8px;border-bottom:1px solid #eee;">
+        <span style="font-weight:600;color:#222;font-size:0.92rem;">{{ d.nombre }}</span>
+        <span style="color:#555;font-size:0.88rem;">
+          {{ d.apertura }} – {{ d.cierre }}
+        </span>
+      </div>
+    </div>
+
+  </div>
+</div>

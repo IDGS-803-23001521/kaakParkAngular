@@ -37,16 +37,17 @@
       <h5 style="font-weight:500;font-size:0.95rem;">Ocupación Por Hora</h5>
       <canvas #lineCanvas height="110"></canvas>
     </div>
-    <div class="card-kaak">
+<div class="card-kaak">
       <h5>Actividad Reciente</h5>
-      <div *ngIf="actividad.length === 0" style="text-align:center;color:#bbb;padding:1.5rem;font-size:0.85rem;">
-        Sin actividad registrada aún
-      </div>
-      <div class="actividad-item" *ngFor="let item of actividad">
-        <img class="act-icon" [src]="getActIcon(item.tipo)" alt=""/>
-        <div class="act-info"><strong>{{ getActLabel(item.tipo) }}</strong><span>{{ item.placa }}</span></div>
-        <span class="act-hora">{{ item.hora }}</span>
+      <div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-start;">
+        <div *ngIf="actividad.length === 0" style="text-align:center; color:#bbb; padding:1.5rem; font-size:0.85rem; margin: auto 0;">
+          Sin actividad registrada aún
+        </div>
+        <div class="actividad-item" *ngFor="let item of actividad">
+          <img class="act-icon" [src]="getActIcon(item.tipo)" alt=""/>
+          <div class="act-info"><strong>{{ getActLabel(item.tipo) }}</strong><span>{{ item.placa }}</span></div>
+          <span class="act-hora">{{ item.hora }}</span>
+        </div>
       </div>
     </div>
   </div>
-</div>
