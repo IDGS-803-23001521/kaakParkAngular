@@ -6,17 +6,17 @@
 body { font-family: 'Segoe UI', sans-serif; background: var(--dark); color: #fff; min-height: 100vh; }
 
 /* NAVBAR */
-.navbar-kaak { background:#3a3a3a; border-bottom:1px solid rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:space-between; height:60px; padding:0 1.5rem; position:sticky; top:0; z-index:200; }
-.nav-izquierda { display:flex; align-items:center; gap:1.2rem; flex:1; justify-content:flex-end; margin-right:80px; }
-.nav-derecha { display:flex; align-items:center; gap:2rem; flex:1; justify-content:flex-start; margin-left:80px; }
+.navbar-kaak { background:#3a3a3a; border-bottom:1px solid rgba(255,255,255,0.08); display:flex; align-items:center; height:60px; padding:0 1.5rem; position:sticky; top:0; z-index:200; }
+.nav-left { width:42px; flex-shrink:0; }
+.nav-izquierda { display:flex; align-items:center; gap:1.2rem; flex:1; justify-content:flex-end; padding-right:1rem; }
+.nav-derecha { display:flex; align-items:center; gap:1.2rem; flex:1; justify-content:flex-start; padding-left:1rem; }
 .nav-izquierda a, .nav-derecha a { color:#aaa; text-decoration:none; font-size:0.82rem; display:flex; align-items:center; gap:6px; padding-bottom:3px; border-bottom:2px solid transparent; transition:color .2s,border-color .2s; white-space:nowrap; }
 .nav-izquierda a img, .nav-derecha a img { width:17px; height:17px; filter:brightness(0) invert(1) opacity(0.4); transition:filter .2s; }
 .nav-izquierda a:hover, .nav-izquierda a.active, .nav-derecha a:hover, .nav-derecha a.active { color:var(--gold); border-bottom-color:var(--gold); }
 .nav-izquierda a:hover img, .nav-izquierda a.active img, .nav-derecha a:hover img, .nav-derecha a.active img { filter:brightness(0) saturate(100%) invert(68%) sepia(60%) saturate(600%) hue-rotate(5deg) brightness(95%); }
-.nav-logo-center { position:absolute; left:50%; top:50%; transform:translate(-50%, -50%); display:flex; align-items:center; justify-content:center; width:120px; height:120px; background:#555; border-radius:50%; border:1px solid #666; box-shadow:0 6px 20px rgba(0,0,0,0.5); flex-shrink:0; z-index:201; }
-.nav-logo-center img { width:110px; height:110px; object-fit:contain; }
-.nav-right { width:60px; display:flex; justify-content:flex-end; }
-.nav-left { width:60px; flex-shrink:0; }
+.nav-logo-center { width:80px; height:80px; background:#555; border-radius:50%; border:1px solid #666; box-shadow:0 6px 20px rgba(0,0,0,0.5); flex-shrink:0; display:flex; align-items:center; justify-content:center; z-index:201; }
+.nav-logo-center img { width:74px; height:74px; object-fit:contain; }
+.nav-right { width:42px; flex-shrink:0; display:flex; justify-content:flex-end; }
 .nav-avatar-btn { display:flex; align-items:center; justify-content:center; position:relative; width:42px; height:42px; border-radius:50%; background:var(--gold); text-decoration:none; transition:opacity .2s; }
 .nav-avatar-btn:hover { opacity:0.85; }
 .nav-avatar-btn .nav-plus { position:absolute; top:-4px; left:-4px; background:var(--gold); color:#111; font-size:0.72rem; font-weight:800; width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid #3a3a3a; }
@@ -156,6 +156,24 @@ body { font-family: 'Segoe UI', sans-serif; background: var(--dark); color: #fff
 @media (max-width:1024px) {
   .dash-grid-top { grid-template-columns:1fr 1fr; }
   .dash-grid-bottom, .cajones-layout, .reportes-grid, .sust-grid, .usuarios-grid { grid-template-columns:1fr; }
+  .nav-izquierda { gap:0.8rem; padding-right:0.5rem; }
+  .nav-derecha   { gap:0.8rem; padding-left:0.5rem; }
+}
+
+@media (max-width:768px) {
+  .nav-izquierda a span, .nav-derecha a span { display:none; }
+  .nav-izquierda { gap:0.6rem; padding-right:0.3rem; }
+  .nav-derecha   { gap:0.6rem; padding-left:0.3rem; }
+  .nav-logo-center { width:60px; height:60px; }
+  .nav-logo-center img { width:54px; height:54px; }
+}
+
+@media (max-width:500px) {
+  .navbar-kaak { padding:0 0.5rem; }
+  .nav-izquierda { gap:0.3rem; }
+  .nav-derecha   { gap:0.3rem; }
+  .nav-logo-center { width:46px; height:46px; }
+  .nav-logo-center img { width:40px; height:40px; }
 }
 
 /* HORARIOS */
