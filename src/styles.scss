@@ -16,7 +16,7 @@ body { font-family: 'Segoe UI', sans-serif; background: var(--dark); color: #fff
 .nav-logo-center { position:absolute; left:50%; top:50%; transform:translate(-50%, -50%); display:flex; align-items:center; justify-content:center; width:120px; height:120px; background:#555; border-radius:50%; border:1px solid #666; box-shadow:0 6px 20px rgba(0,0,0,0.5); flex-shrink:0; z-index:201; }
 .nav-logo-center img { width:110px; height:110px; object-fit:contain; }
 .nav-right { width:60px; display:flex; justify-content:flex-end; }
-.nav-left  { width:60px; flex-shrink:0; }
+.nav-left { width:60px; flex-shrink:0; }
 .nav-avatar-btn { display:flex; align-items:center; justify-content:center; position:relative; width:42px; height:42px; border-radius:50%; background:var(--gold); text-decoration:none; transition:opacity .2s; }
 .nav-avatar-btn:hover { opacity:0.85; }
 .nav-avatar-btn .nav-plus { position:absolute; top:-4px; left:-4px; background:var(--gold); color:#111; font-size:0.72rem; font-weight:800; width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid #3a3a3a; }
@@ -157,3 +157,52 @@ body { font-family: 'Segoe UI', sans-serif; background: var(--dark); color: #fff
   .dash-grid-top { grid-template-columns:1fr 1fr; }
   .dash-grid-bottom, .cajones-layout, .reportes-grid, .sust-grid, .usuarios-grid { grid-template-columns:1fr; }
 }
+
+/* HORARIOS */
+.horarios-page { display:grid; grid-template-columns: 1.4fr 1fr; gap:1.5rem; padding:1.5rem; }
+.horarios-card-grande { grid-row: span 1; }
+.horarios-fila-row { display:flex; align-items:center; gap:1rem; padding:10px 0; border-bottom:1px solid #f2f2f2; }
+.horarios-fila-row:last-of-type { border-bottom:none; }
+.horarios-dia-nombre { width:90px; flex-shrink:0; font-weight:600; color:#222; font-size:0.85rem; }
+.horarios-switch { position:relative; width:38px; height:20px; flex-shrink:0; }
+.horarios-switch input { opacity:0; width:0; height:0; }
+.horarios-switch-slider { position:absolute; cursor:pointer; inset:0; background:#ddd; border-radius:20px; transition:.2s; }
+.horarios-switch-slider:before { content:""; position:absolute; width:14px; height:14px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s; }
+.horarios-switch input:checked + .horarios-switch-slider { background:var(--gold); }
+.horarios-switch input:checked + .horarios-switch-slider:before { transform:translateX(18px); }
+.horarios-fila-inputs { display:flex; align-items:center; gap:6px; margin-left:auto; }
+.horarios-fila-inputs input[type="time"] { background:#f6f6f6; border:1px solid #e5e5e5; border-radius:7px; padding:6px 8px; font-size:0.78rem; color:#333; outline:none; width:82px; }
+.horarios-fila-inputs input[type="time"]:disabled { opacity:0.4; }
+.horarios-guion { color:#aaa; font-size:0.8rem; }
+
+.horarios-estado-row { display:flex; align-items:center; gap:1.5rem; margin-bottom:1.25rem; }
+.horarios-donut { width:90px; height:90px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.horarios-donut-centro { width:64px; height:64px; background:#fff; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.horarios-donut-pct { font-weight:700; color:#222; font-size:1rem; }
+.horarios-donut-label { font-size:0.6rem; color:#999; text-align:center; }
+.horarios-leyenda { display:flex; flex-direction:column; gap:6px; font-size:0.8rem; color:#555; }
+.horarios-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:6px; }
+.horarios-dot.dorado { background:var(--gold); }
+.horarios-dot.gris { background:#e0e0e0; }
+.horarios-stat-fila { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #f2f2f2; font-size:0.85rem; color:#888; }
+.horarios-stat-fila:last-child { border-bottom:none; }
+.horarios-stat-fila strong { color:#222; font-size:0.9rem; }
+.horarios-stat-fila strong.rojo { color:#c0392b; }
+
+.horarios-bars { display:flex; align-items:flex-end; justify-content:space-between; gap:8px; height:140px; padding-top:1rem; }
+.horarios-bar-col { display:flex; flex-direction:column; align-items:center; flex:1; height:100%; justify-content:flex-end; }
+.horarios-bar-track { width:65%; height:100%; display:flex; align-items:flex-end; }
+.horarios-bar-fill { width:100%; background:linear-gradient(180deg, #e0bb4a, var(--gold)); border-radius:5px 5px 0 0; transition:height .2s; }
+.horarios-bar-fill.apagada { background:#e6e6e6; }
+.horarios-bar-label { font-size:0.68rem; color:#999; margin-top:6px; text-transform:uppercase; }
+
+.horarios-chip { display:flex; align-items:center; gap:10px; background:#fafafa; border:1px solid #eee; border-radius:10px; padding:10px 12px; margin-bottom:8px; }
+.horarios-chip-dot { width:8px; height:8px; border-radius:50%; background:var(--gold); flex-shrink:0; }
+.horarios-chip-texto { flex:1; display:flex; flex-direction:column; }
+.horarios-chip-texto strong { font-size:0.85rem; color:#222; }
+.horarios-chip-texto span { font-size:0.75rem; color:#999; margin-top:2px; }
+.horarios-btn-eliminar { background:none; border:none; color:#c0392b; font-size:0.85rem; cursor:pointer; padding:4px 8px; border-radius:6px; }
+.horarios-btn-eliminar:hover { background:#fdeeec; }
+.horarios-add-especial { display:flex; align-items:center; gap:6px; margin-top:0.75rem; padding-top:0.75rem; border-top:1px dashed #ddd; flex-wrap:wrap; }
+.horarios-add-especial input { background:#f6f6f6; border:1px solid #e5e5e5; border-radius:8px; padding:7px 10px; font-size:0.8rem; color:#333; outline:none; }
+.horarios-add-especial input[type="text"] { flex:1; min-width:100px; }

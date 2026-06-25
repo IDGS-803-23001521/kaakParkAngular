@@ -1,21 +1,91 @@
 <app-navbar></app-navbar>
 <div class="page-bg page-bg-gears">
-  <div style="max-width:720px;margin:2rem auto;padding:0 1rem;">
+  <div class="horarios-page">
 
-    <div class="card-kaak" style="margin-bottom:1.5rem;">
-      <h5>Horario de Operación</h5>
-      <p style="color:#888;font-size:0.85rem;margin-top:-8px;">
-        Consulta los horarios de apertura y cierre de K'áaxPark.
-      </p>
+    <div class="card-kaak horarios-card-grande">
+      <h5>Horario Regular</h5>
+      <div *ngFor="let d of dias" class="horarios-fila-row">
+        <span class="horarios-dia-nombre">{{ d.nombre }}</span>
+        <label class="horarios-switch">
+          <input type="checkbox" [(ngModel)]="d.abierto"/>
+          <span class="horarios-switch-slider"></span>
+        </label>
+        <div class="horarios-fila-inputs">
+          <input type="time" [(ngModel)]="d.apertura" [disabled]="!d.abierto"/>
+          <span class="horarios-guion">–</span>
+          <input type="time" [(ngModel)]="d.cierre" [disabled]="!d.abierto"/>
+        </div>
+      </div>
+      <div class="form-btns" style="margin-top:1.25rem;">
+        <button class="btn-cancelar">Cancelar</button>
+        <button class="btn-guardar">Guardar horario</button>
+      </div>
     </div>
 
     <div class="card-kaak">
-      <div *ngFor="let d of dias"
-           style="display:flex;justify-content:space-between;align-items:center;padding:14px 8px;border-bottom:1px solid #eee;">
-        <span style="font-weight:600;color:#222;font-size:0.92rem;">{{ d.nombre }}</span>
-        <span style="color:#555;font-size:0.88rem;">
-          {{ d.apertura }} – {{ d.cierre }}
-        </span>
+      <h5>Estado Actual</h5>
+      <div class="horarios-estado-row">
+        <div class="horarios-donut" [style.background]="donutBg()">
+          <div class="horarios-donut-centro">
+            <span class="horarios-donut-pct">{{ horasHoy() }}h</span>
+            <span class="horarios-donut-label">abiertas hoy</span>
+          </div>
+        </div>
+        <div class="horarios-leyenda">
+          <span><span class="horarios-dot dorado"></span> Abierto</span>
+          <span><span class="horarios-dot gris"></span> Cerrado</span>
+        </div>
+      </div>
+
+      <div class="horarios-stat-fila">
+        <span>Estado</span>
+        <strong [class.rojo]="!abiertoAhora()">{{ abiertoAhora() ? 'Abierto' : 'Cerrado' }}</strong>
+      </div>
+      <div class="horarios-stat-fila">
+        <span>Horario de hoy</span>
+        <strong>{{ horarioHoyTexto() }}</strong>
+      </div>
+      <div class="horarios-stat-fila">
+        <span>Próximo cambio</span>
+        <strong>{{ proximoCambio() }}</strong>
+      </div>
+    </div>
+
+    <div class="card-kaak">
+      <h5>Horas de Operación por Día</h5>
+      <div class="horarios-bars">
+        <div *ngFor="let d of dias" class="horarios-bar-col">
+          <div class="horarios-bar-track">
+            <div class="horarios-bar-fill" [class.apagada]="!d.abierto" [style.height.%]="d.abierto ? wPct(d) : 4"></div>
+          </div>
+          <span class="horarios-bar-label">{{ d.nombre.slice(0,3) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-kaak">
+      <h5>Días Especiales / Festivos</h5>
+
+      <div *ngFor="let e of especiales" class="horarios-chip">
+        <span class="horarios-chip-dot"></span>
+        <div class="horarios-chip-texto">
+          <strong>{{ e.etiqueta }}</strong>
+          <span>{{ e.fecha }} · {{ e.apertura }}–{{ e.cierre }}</span>
+        </div>
+        <button class="horarios-btn-eliminar" (click)="eliminarEspecial(e)">✕</button>
+      </div>
+
+      <div *ngIf="especiales.length === 0" style="text-align:center;color:#aaa;padding:1rem;font-size:0.85rem;">
+        Sin días especiales registrados
+      </div>
+
+      <div class="horarios-add-especial">
+        <input type="text" placeholder="Etiqueta" [(ngModel)]="nuevaEtiqueta"/>
+        <input type="date" [(ngModel)]="nuevaFecha"/>
+        <input type="time" [(ngModel)]="nuevaApertura"/>
+        <span class="horarios-guion">–</span>
+        <input type="time" [(ngModel)]="nuevaCierre"/>
+        <button class="btn-guardar" (click)="agregarEspecial()">+</button>
       </div>
     </div>
 
