@@ -22,7 +22,7 @@
       </div>
     </div>
 
-    <div class="card-kaak">
+    <div class="card-kaak ">
       <h5>Estado Actual</h5>
       <div class="horarios-estado-row">
         <div class="horarios-donut" [style.background]="donutBg()">
@@ -50,20 +50,7 @@
         <strong>{{ proximoCambio() }}</strong>
       </div>
     </div>
-
-    <div class="card-kaak">
-      <h5>Horas de Operación por Día</h5>
-      <div class="horarios-bars">
-        <div *ngFor="let d of dias" class="horarios-bar-col">
-          <div class="horarios-bar-track">
-            <div class="horarios-bar-fill" [class.apagada]="!d.abierto" [style.height.%]="d.abierto ? wPct(d) : 4"></div>
-          </div>
-          <span class="horarios-bar-label">{{ d.nombre.slice(0,3) }}</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="card-kaak">
+    <div class="card-kaak" >
       <h5>Días Especiales / Festivos</h5>
 
       <div *ngFor="let e of especiales" class="horarios-chip">
