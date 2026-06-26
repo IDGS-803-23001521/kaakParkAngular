@@ -1,18 +1,21 @@
 <div class="login-page" style="background-image: url('assets/images/FONDO_LOGIN.png');">
   <div class="login-card">
     <div class="login-title">
-      <h2>K'áax<span class="gold">Park</span></h2>
+      <div class="login-title">
+        <h2>K'áax<span class="gold">Park</span></h2>
+        <p style="font-size:0.8rem; color:#888; margin-top:0.2rem;">Bienvenido de nuevo</p>
+      </div>
     </div>
     <div class="alert-error" *ngIf="error">{{ error }}</div>
     <div class="input-group-kaak">
-      <img class="icon" src="assets/images/UsuarioD.png" alt=""/>
-      <input type="email" placeholder="Correo electrónico" [(ngModel)]="email" autocomplete="off"/>
+      <img class="icon" src="assets/images/UsuarioD.png" alt="" />
+      <input type="email" placeholder="Correo electrónico" [(ngModel)]="email" autocomplete="off" />
     </div>
     <div class="input-group-kaak">
-      <img class="icon" src="assets/images/candado.png" alt=""/>
-      <input [type]="showPassword ? 'text' : 'password'" placeholder="Contraseña" [(ngModel)]="password"/>
+      <img class="icon" src="assets/images/candado.png" alt="" />
+      <input [type]="showPassword ? 'text' : 'password'" placeholder="Contraseña" [(ngModel)]="password" />
       <button type="button" class="eye-btn" (click)="togglePassword()">
-        <img src="assets/images/Ojo.png" alt="ver"/>
+        <img src="assets/images/Ojo.png" alt="ver" />
       </button>
     </div>
     <button class="btn-gold" style="margin-top:0.5rem;" (click)="onLogin()" [disabled]="loading">

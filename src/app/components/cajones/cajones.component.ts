@@ -14,19 +14,19 @@ export class CajonesComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('donutCapCanvas') donutCapCanvas!: ElementRef;
 
   cajones: Cajon[] = [];
-  niveles = [4, 3, 2, 1];
+  niveles = [3, 2, 1];
   tiempoAhora = new Date();
 
   private subs: Subscription[] = [];
   private donutChart: any;
   private timeInterval: any;
 
-  get totalCajones()      { return this.cajones.length; }
-  get totalOcupados()     { return this.cajones.filter(c => c.estado === 'Ocupado').length; }
-  get totalLibres()       { return this.cajones.filter(c => c.estado === 'Libre').length; }
-  get totalMantenimiento(){ return this.cajones.filter(c => c.estado === 'Mantenimiento').length; }
-  get pctOcupado()        { return this.totalCajones ? Math.round((this.totalOcupados / this.totalCajones) * 100) : 0; }
-  get pctLibre()          { return this.totalCajones ? Math.round((this.totalLibres   / this.totalCajones) * 100) : 0; }
+  get totalCajones() { return this.cajones.length; }
+  get totalOcupados() { return this.cajones.filter(c => c.estado === 'Ocupado').length; }
+  get totalLibres() { return this.cajones.filter(c => c.estado === 'Libre').length; }
+  get totalMantenimiento() { return this.cajones.filter(c => c.estado === 'Mantenimiento').length; }
+  get pctOcupado() { return this.totalCajones ? Math.round((this.totalOcupados / this.totalCajones) * 100) : 0; }
+  get pctLibre() { return this.totalCajones ? Math.round((this.totalLibres / this.totalCajones) * 100) : 0; }
 
   get cajonesOcupadosConTiempo(): Array<Cajon & { tiempoMin: number }> {
     return this.cajones
@@ -55,12 +55,12 @@ export class CajonesComponent implements OnInit, AfterViewInit, OnDestroy {
     return m > 0 ? `${h}h ${m}m` : `${h}h`;
   }
 
-  constructor(private fb: FirebaseService) {}
+  constructor(private fb: FirebaseService) { }
 
   async ngOnInit(): Promise<void> {
     await this.fb.seedCajonesIfEmpty();
     const sub = this.fb.getCajones().subscribe(cajones => {
-      this.cajones = cajones;
+      this.cajones = cajones.filter(c => c.nivel !== 4);
       this.updateDonut();
     });
     this.subs.push(sub);

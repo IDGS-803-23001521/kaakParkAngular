@@ -3,33 +3,41 @@
 
   <div class="nav-izquierda">
     <a routerLink="/dashboard" [class.active]="isActive('/dashboard')">
-      <img src="assets/images/DashB.png" alt=""/><span>Dashboard</span>
+      <img src="assets/images/DashB.png" alt="" /><span>Dashboard</span>
     </a>
-    <a routerLink="/horarios" [class.active]="isActive('/horarios')">
-      <img src="assets/images/RelojB.png" alt=""/><span>Horarios</span>
+    <a routerLink="/reportes" [class.active]="isActive('/reportes')">
+      <img src="assets/images/GraficoB.png" alt="" /><span>Reportes y Analítica</span>
     </a>
     <a routerLink="/cajones" [class.active]="isActive('/cajones')">
-      <img src="assets/images/CajonPB.png" alt=""/><span>Cajones</span>
+      <img src="assets/images/CajonPB.png" alt="" /><span>Cajones</span>
     </a>
   </div>
 
   <div class="nav-logo-center">
-    <img src="assets/images/Logo.png" alt="K'áaxPark"/>
+    <img src="assets/images/Logo.png" alt="K'áaxPark" />
   </div>
 
   <div class="nav-derecha">
-    <a routerLink="/reportes" [class.active]="isActive('/reportes')">
-      <img src="assets/images/GraficoB.png" alt=""/><span>Reportes y Analítica</span>
+    <a routerLink="/horarios" [class.active]="isActive('/horarios')">
+      <img src="assets/images/RelojB.png" alt="" /><span>Horarios</span>
     </a>
     <a routerLink="/sustentabilidad" [class.active]="isActive('/sustentabilidad')">
-      <img src="assets/images/SosteB.png" alt=""/><span>Sustentabilidad</span>
+      <img src="assets/images/SosteB.png" alt="" /><span>Sustentabilidad</span>
+    </a>
+    <a routerLink="/usuarios" [class.active]="isActive('/usuarios')">
+      <img src="assets/images/UsuarioD.png" alt="" /><span>Usuarios</span>
     </a>
   </div>
 
   <div class="nav-right">
-    <a routerLink="/usuarios" class="nav-avatar-btn" [class.active-avatar]="isActive('/usuarios')">
-      <span class="nav-plus">+</span>
-      <img src="assets/images/avatar.png" alt="Admin"/>
-    </a>
+    <button class="nav-logout-btn" (click)="onLogout()" title="Cerrar sesión">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+        <polyline points="16 17 21 12 16 7" />
+        <line x1="21" y1="12" x2="9" y2="12" />
+      </svg>
+      <span>Salir</span>
+    </button>
   </div>
 </nav>

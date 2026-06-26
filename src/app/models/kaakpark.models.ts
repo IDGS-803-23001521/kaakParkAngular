@@ -8,6 +8,7 @@ export interface Usuario {
   genero: 'M' | 'F';
   fechaIngreso: string;
   activo: boolean;
+  eliminado?: boolean;
   foto?: string;
 }
 
