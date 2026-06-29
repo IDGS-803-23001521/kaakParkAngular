@@ -1,0 +1,137 @@
+<app-navbar></app-navbar>
+<div class="page-bg page-bg-gears">
+  <div class="motores-wrap">
+
+    <!-- Estado de conexión -->
+    <div class="card-kaak motor-conn-card">
+      <div class="motor-conn-row">
+        <span class="motor-status-dot"
+              [class.online]="(conexion$ | async) === 'conectado'"
+              [class.error]="(conexion$ | async) === 'error'"></span>
+        <h5>Control de motores</h5>
+        <span class="motor-conn-label">{{ conexion$ | async }}</span>
+        <input class="filtro-input motor-broker-input" [(ngModel)]="brokerUrl" placeholder="ws://192.168.1.10:9001" />
+        <button class="btn-guardar" (click)="conectar()">Conectar</button>
+      </div>
+      <div class="motor-exec-banner" *ngIf="$any(estado$ | async)?.ejecutando">
+        <span class="motor-spin">⟳</span> Ejecutando secuencia…
+      </div>
+    </div>
+
+    <div class="motor-layout">
+
+      <!-- Panel izquierdo: control manual + constructor -->
+      <div class="motor-panel-left">
+
+        <div class="card-kaak">
+          <h5>Control manual</h5>
+          <div class="motor-grid">
+
+            <div class="motor-card">
+              <div class="motor-card-head">
+                <span class="motor-badge motor-badge-stepper">P1</span>
+                <div><strong>Paso 1</strong><small>NEMA17 · Stepper</small></div>
+              </div>
+              <input class="filtro-input" type="number" [(ngModel)]="p1Pasos" placeholder="pasos (+/-)" />
+              <div class="motor-slider-label"><span>Velocidad (µs)</span><span>{{ p1Vel }}</span></div>
+              <input class="motor-range" type="range" min="200" max="5000" step="100" [(ngModel)]="p1Vel" />
+              <div class="motor-card-actions">
+                <button class="btn-guardar" [disabled]="ocupado" (click)="enviarComando('P1')">▶ Mover</button>
+                <button class="btn-icon motor-add-mini" title="Agregar a la secuencia" (click)="agregarDesdeMotor('P1')">+</button>
+              </div>
+            </div>
+
+            <div class="motor-card">
+              <div class="motor-card-head">
+                <span class="motor-badge motor-badge-stepper">P2</span>
+                <div><strong>Paso 2</strong><small>NEMA17 · Stepper</small></div>
+              </div>
+              <input class="filtro-input" type="number" [(ngModel)]="p2Pasos" placeholder="pasos (+/-)" />
+              <div class="motor-slider-label"><span>Velocidad (µs)</span><span>{{ p2Vel }}</span></div>
+              <input class="motor-range" type="range" min="200" max="5000" step="100" [(ngModel)]="p2Vel" />
+              <div class="motor-card-actions">
+                <button class="btn-guardar" [disabled]="ocupado" (click)="enviarComando('P2')">▶ Mover</button>
+                <button class="btn-icon motor-add-mini" title="Agregar a la secuencia" (click)="agregarDesdeMotor('P2')">+</button>
+              </div>
+            </div>
+
+            <div class="motor-card" *ngFor="let m of motoresDc">
+              <div class="motor-card-head">
+                <span class="motor-badge motor-badge-dc">{{ m }}</span>
+                <div><strong>Motor {{ m.slice(1) }}</strong><small>TB6612 · DC</small></div>
+              </div>
+              <div class="motor-slider-label"><span>Velocidad</span><span>{{ dcVel[m] }}</span></div>
+              <input class="motor-range" type="range" min="-255" max="255" step="5" [(ngModel)]="dcVel[m]" />
+              <div class="motor-card-actions">
+                <button class="btn-guardar" [disabled]="ocupado" (click)="enviarDC(m)">▶ Aplicar</button>
+                <button class="btn-icon motor-add-mini" title="Agregar a la secuencia" (click)="agregarDC(m)">+</button>
+              </div>
+            </div>
+
+          </div>
+          <button class="btn-eliminar-confirm motor-stop-all" (click)="pararTodo()">PARAR TODO</button>
+        </div><br>
+
+        <div class="card-kaak">
+          <h5>Constructor de secuencias</h5>
+          <div class="motor-hint">Configura un motor arriba y dale "+" para agregarlo aquí, en el orden que quieras.</div>
+
+          <!-- Acciones especiales: no son de un motor en particular -->
+          <div class="motor-especiales-row">
+            <span class="motor-especiales-label">Esperar</span>
+            <input class="filtro-input" type="number" [(ngModel)]="esperarMs" />
+            <span class="motor-add-unidad">ms</span>
+            <button class="btn-icon motor-add-mini" title="Agregar espera" (click)="agregarEsperar()">+</button>
+            <span class="motor-especiales-sep"></span>
+            <button class="btn-cancelar" (click)="agregarPararDc()">+ Parar DC</button>
+          </div>
+
+          <ng-container *ngIf="pasos.length; else sinPasos">
+            <div class="motor-step-item" *ngFor="let p of pasos; let i = index">
+              <span class="motor-step-num">{{ i + 1 }}</span>
+              <span class="motor-step-badge">{{ p.tipo }}</span>
+              <span class="motor-step-desc">{{ descripcionPaso(p) }}</span>
+              <button class="btn-icon" title="Subir" (click)="moverPaso(i, -1)">↑</button>
+              <button class="btn-icon" title="Bajar" (click)="moverPaso(i, 1)">↓</button>
+              <button class="btn-icon btn-icon-eliminar" title="Eliminar" (click)="borrarPaso(i)">×</button>
+            </div>
+          </ng-container>
+          <ng-template #sinPasos>
+            <div class="empty-msg">Sin pasos — agrega uno desde un motor o desde acciones especiales</div>
+          </ng-template>
+
+          <div class="motor-seq-name-row">
+            <input class="filtro-input" [(ngModel)]="nombreSecuencia" placeholder="Nombre de la secuencia…" />
+            <button class="btn-guardar" (click)="guardarSecuencia()">{{ editandoId ? 'Guardar cambios' : 'Guardar' }}</button>
+            <button class="btn-cancelar" (click)="limpiarSecuencia()">{{ editandoId ? 'Cancelar edición' : 'Limpiar' }}</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Panel derecho: secuencias guardadas (Firebase es la fuente) -->
+      <div class="card-kaak motor-panel-right">
+        <h5>Secuencias guardadas</h5>
+        <div *ngIf="cargandoSecuencias" class="empty-msg">Cargando…</div>
+        <div *ngIf="!cargandoSecuencias && secuenciasFirebase.length === 0" class="empty-msg">
+          Sin secuencias guardadas todavía
+        </div>
+        <div class="motor-seq-saved-item" *ngFor="let s of secuenciasFirebase">
+          <div class="motor-seq-info">
+            <div class="motor-seq-name">{{ s.nombre }}</div>
+            <div class="motor-seq-count">{{ s.pasos.length }} paso{{ s.pasos.length !== 1 ? 's' : '' }}</div>
+          </div>
+          <button class="btn-icon" title="Ejecutar" [disabled]="ocupado" (click)="ejecutarSecuencia(s)">▶</button>
+          <button class="btn-icon" title="Editar" (click)="editarSecuencia(s)">✏️</button>
+          <button class="btn-icon btn-icon-eliminar" title="Eliminar" (click)="eliminarSecuencia(s)">🗑</button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<div class="motor-toast" [class.show]="toastVisible" [class.ok]="toastTipo==='ok'" [class.err]="toastTipo==='err'" [class.info]="toastTipo==='info'">
+  {{ toastMsg }}
+</div>

@@ -8,6 +8,7 @@ import { CajonesComponent }         from './components/cajones/cajones.component
 import { ReportesComponent }        from './components/reportes/reportes.component';
 import { SustentabilidadComponent } from './components/sustentabilidad/sustentabilidad.component';
 import { UsuariosComponent }        from './components/usuarios/usuarios.component';
+import { ControlMotoresComponent } from './components/motores/control-motores.component';
 import { HorariosComponent } from './components/horarios/horarios.component';
 
 const routes: Routes = [
@@ -18,6 +19,7 @@ const routes: Routes = [
   { path: 'reportes',         component: ReportesComponent,        canActivate: [AuthGuard] },
   { path: 'sustentabilidad',  component: SustentabilidadComponent, canActivate: [AuthGuard] },
   { path: 'usuarios',         component: UsuariosComponent,        canActivate: [AuthGuard] },
+  { path: 'control-motores', component: ControlMotoresComponent },
   { path: 'horarios', component: HorariosComponent, canActivate: [AuthGuard] },
   { path: '**', redirectTo: '/login' }
 ];

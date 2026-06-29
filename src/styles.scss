@@ -418,3 +418,198 @@ body { font-family: 'Segoe UI', sans-serif; background: var(--dark); color: #fff
 .horarios-add-especial input { background:#f6f6f6; border:1px solid #e5e5e5; border-radius:8px; padding:7px 10px; font-size:0.8rem; color:#333; outline:none; }
 .horarios-add-especial input[type="text"] { flex:1; min-width:100px; }
 @media (max-width:900px) { .horarios-page { grid-template-columns:1fr; grid-template-rows:auto; } .horarios-card-grande { grid-column:1; grid-row:auto; } }
+
+.motor-conn-card { margin-bottom: 1.25rem; }
+
+.motor-conn-row {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.motor-conn-row h5 { margin: 0; }
+.motor-conn-row > button { flex: 0 0 auto; }
+
+.motor-status-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: #bbb; flex-shrink: 0;
+}
+.motor-status-dot.online { background: var(--green); }
+.motor-status-dot.error  { background: #e57373; }
+
+.motor-conn-label { font-size: 0.78rem; color: #888; text-transform: capitalize; }
+.motor-broker-input { max-width: 240px; margin-left: auto; }
+
+.motor-exec-banner {
+  margin-top: 10px; padding: 8px 12px; border-radius: 9px;
+  background: #f5ede0; color: var(--gold);
+  font-size: 0.82rem; display: flex; align-items: center; gap: 8px;
+  font-weight: 600;
+}
+.motor-spin { display: inline-block; animation: motor-spin 1s linear infinite; }
+@keyframes motor-spin { to { transform: rotate(360deg); } }
+
+.motor-layout {
+  display: grid; grid-template-columns: 1fr 320px; gap: 1.25rem;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .motor-layout { grid-template-columns: 1fr; }
+}
+
+.motor-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.7rem;
+  margin-bottom: 0.75rem;
+  align-items: start; /* evita que las tarjetas más cortas se estiren */
+}
+@media (max-width: 700px) {
+  .motor-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* Tratamiento "campo inset" — igual que .form-group input / .filtro-input,
+   no una tarjeta blanca-sobre-blanca */
+.motor-card {
+  background: #f6f6f6; border: 1.5px solid #e5e5e5; border-radius: 9px;
+  padding: 12px; display: flex; flex-direction: column; gap: 8px;
+}
+
+.motor-card-head { display: flex; align-items: center; gap: 8px; }
+.motor-card-head strong { display: block; font-size: 0.85rem; color: #1a1a1a; }
+.motor-card-head small { display: block; font-size: 0.72rem; color: #888; }
+
+.motor-badge {
+  width: 30px; height: 30px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.68rem; font-weight: 700; flex-shrink: 0;
+}
+/* Mismo combo que .badge-ocupado: fondo oscuro + texto dorado */
+.motor-badge-stepper { background: #1a1a1a; color: var(--gold); }
+/* Mismo combo que .card-icon: crema pálido + texto dorado */
+.motor-badge-dc { background: #f5ede0; color: var(--gold); }
+
+.motor-slider-label { display: flex; justify-content: space-between; font-size: 0.72rem; color: #888; }
+.motor-range { width: 100%; accent-color: var(--gold); }
+
+.motor-btn-run, .motor-stop-all { flex: 0 0 auto; width: 100%; text-align: center; }
+.motor-stop-all { margin-top: 4px; }
+
+/* ---- Constructor de secuencias ---- */
+.motor-seq-name-row { display: flex; gap: 8px; margin-bottom: 0.75rem; }
+.motor-seq-name-row .filtro-input { flex: 1; }
+.motor-seq-name-row button { flex: 0 0 auto; }
+
+.motor-step-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 0; border-bottom: 1px solid #f5f5f5;
+  font-size: 0.85rem; color: #333;
+}
+.motor-step-item:last-child { border-bottom: none; }
+
+.motor-step-num {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: #f5ede0; color: var(--gold);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.68rem; font-weight: 700; flex-shrink: 0;
+}
+/* Mismo combo que .tab-count: gris pálido + texto gris */
+.motor-step-badge {
+  font-size: 0.68rem; font-weight: 700; padding: 1px 7px;
+  border-radius: 20px; background: #e8e8e8; color: #777;
+}
+.motor-step-desc { flex: 1; }
+
+.motor-add-step-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.motor-add-step-row select { min-width: 110px; }
+.motor-add-step-row input { max-width: 100px; }
+.motor-add-step-row button { flex: 0 0 auto; }
+.motor-add-unidad { font-size: 0.78rem; color: #888; white-space: nowrap; }
+
+/* ---- Panel derecho: mismo patrón que .historial-item ---- */
+.motor-seq-saved-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 0; border-bottom: 1px solid #f5f5f5;
+}
+.motor-seq-saved-item:last-child { border-bottom: none; }
+.motor-seq-info { flex: 1; }
+.motor-seq-name { font-weight: 600; font-size: 0.85rem; color: #1a1a1a; }
+.motor-seq-count { font-size: 0.72rem; color: #888; margin-top: 2px; }
+
+/* ---- Toast: tarjeta clara, igual que el resto de tus cards ---- */
+.motor-toast {
+  position: fixed; bottom: 20px; right: 20px;
+  background: #fff; color: #1a1a1a; border-radius: 10px;
+  padding: 10px 16px; font-size: 0.82rem; z-index: 1000;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+  opacity: 0; transform: translateY(8px); transition: all 0.25s;
+  pointer-events: none;
+}
+.motor-toast.show { opacity: 1; transform: translateY(0); }
+.motor-toast.ok   { border-left: 3px solid var(--green); }
+.motor-toast.err  { border-left: 3px solid #e57373; }
+.motor-toast.info { border-left: 3px solid var(--gold); }
+
+/* ---- Agregar a la secuencia desde cada tarjeta de motor ---- */
+.motor-card-actions { display: flex; gap: 6px; }
+.motor-card-actions .btn-guardar { flex: 1; }
+.motor-add-mini {
+  flex: 0 0 auto; width: 36px; font-weight: 700; font-size: 0.95rem;
+  color: var(--gold); border-color: var(--gold);
+}
+.motor-add-mini:hover { background: var(--gold); color: #111; }
+
+.motor-hint { font-size: 0.78rem; color: #888; margin-bottom: 0.75rem; }
+
+/* ---- Acciones especiales: Esperar / Parar DC ---- */
+.motor-especiales-row {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 10px 0 0.75rem; margin-bottom: 0.75rem;
+  border-bottom: 1px dashed #e5e5e5;
+}
+.motor-especiales-label { font-size: 0.8rem; color: #555; font-weight: 600; }
+.motor-especiales-row .filtro-input { max-width: 90px; flex: 0 0 auto; }
+.motor-especiales-row .btn-cancelar { flex: 0 0 auto; }
+.motor-especiales-sep { flex: 1; }
+
+/* ---- Agregar a la secuencia desde cada tarjeta de motor ---- */
+.motor-card-actions { display: flex; gap: 6px; }
+.motor-card-actions .btn-guardar { flex: 1; }
+.motor-add-mini {
+  flex: 0 0 auto; width: 36px; font-weight: 700; font-size: 0.95rem;
+  color: var(--gold); border-color: var(--gold);
+}
+.motor-add-mini:hover { background: var(--gold); color: #111; }
+
+.motor-hint { font-size: 0.78rem; color: #888; margin-bottom: 0.75rem; }
+
+/* ---- Acciones especiales: Esperar / Parar DC ---- */
+.motor-especiales-row {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 10px 0 0.75rem; margin-bottom: 0.75rem;
+  border-bottom: 1px dashed #e5e5e5;
+}
+.motor-especiales-label { font-size: 0.8rem; color: #555; font-weight: 600; }
+.motor-especiales-row .filtro-input { max-width: 90px; flex: 0 0 auto; }
+.motor-especiales-row .btn-cancelar { flex: 0 0 auto; }
+.motor-especiales-sep { flex: 1; }
+.motor-card-actions { align-items: center; }
+
+.motores-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+/* ---- Vinculación de secuencias por cajón (página Cajones) ---- */
+.cajon-seq-row {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  padding: 10px 0; border-bottom: 1px solid #f5f5f5;
+}
+.cajon-seq-row:last-child { border-bottom: none; }
+.cajon-seq-label { font-weight: 700; font-size: 0.85rem; color: #1a1a1a; flex: 0 0 110px; }
+.cajon-seq-control { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 220px; }
+.cajon-seq-tag { font-size: 0.72rem; color: #888; font-weight: 700; text-transform: uppercase; flex: 0 0 50px; }
+.cajon-seq-control select { flex: 1; min-width: 0; }
+
+/* ---- Estado visual deshabilitado (no existía para estos botones) ---- */
+.btn-guardar:disabled, .btn-cancelar:disabled, .btn-icon:disabled {
+  opacity: 0.4; cursor: not-allowed;
+}

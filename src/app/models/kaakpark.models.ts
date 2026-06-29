@@ -19,6 +19,8 @@ export interface Cajon {
   estado: 'Libre' | 'Ocupado' | 'Mantenimiento';
   placa?: string;
   horaEntrada?: string;
+  secuenciaIngresoId?: string;
+  secuenciaSalidaId?: string;
 }
 
 export interface ActividadReciente {

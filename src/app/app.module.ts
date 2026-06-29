@@ -14,6 +14,7 @@ import { CajonesComponent }         from './components/cajones/cajones.component
 import { ReportesComponent }        from './components/reportes/reportes.component';
 import { SustentabilidadComponent } from './components/sustentabilidad/sustentabilidad.component';
 import { UsuariosComponent }        from './components/usuarios/usuarios.component';
+import { ControlMotoresComponent }  from './components/motores/control-motores.component';
 import { HorariosComponent } from './components/horarios/horarios.component';
 
 if (!getApps().length) {
@@ -30,6 +31,7 @@ if (!getApps().length) {
     ReportesComponent,
     SustentabilidadComponent,
     UsuariosComponent,
+    ControlMotoresComponent,
     HorariosComponent
   ],
   imports: [

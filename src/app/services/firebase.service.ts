@@ -11,6 +11,7 @@ import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { Observable } from 'rxjs';
 import { Cajon, Usuario, ActividadReciente, SustentabilidadData, ReporteHistorial } from '../models/kaakpark.models';
 import { environment } from '../../environments/environment';
+import { Secuencia } from '../services/mqtt-robot.service';
 
 @Injectable({ providedIn: 'root' })
 export class FirebaseService {
@@ -53,6 +54,19 @@ export class FirebaseService {
   updateCajon(id: string, data: Partial<Cajon>): Promise<void> {
     return updateDoc(doc(this.db, `${this.CAJONES_COL}/${id}`), data as any);
   }
+
+  
+getSecuencias(): Observable<Secuencia[]> {
+  return this.snapCollection<Secuencia>(collection(this.db, 'secuencias'));
+}
+ 
+addSecuencia(s: Secuencia): Promise<any> {
+  return addDoc(collection(this.db, 'secuencias'), s);
+}
+ 
+updateSecuencia(id: string, cambios: Partial<Secuencia>): Promise<void> {
+  return updateDoc(doc(this.db, `secuencias/${id}`), cambios as any);
+}
 
   async seedCajonesIfEmpty(): Promise<void> {
     const snap = await getDocs(collection(this.db, this.CAJONES_COL));
@@ -134,4 +148,5 @@ export class FirebaseService {
   async addReporte(reporte: ReporteHistorial): Promise<void> {
     await addDoc(collection(this.db, 'reportes'), reporte as any);
   }
+  
 }
