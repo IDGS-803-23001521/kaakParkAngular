@@ -109,6 +109,31 @@ updateSecuencia(id: string, cambios: Partial<Secuencia>): Promise<void> {
     }
   }
 
+    // ─── ACTIVIDAD CLIENTES ────────────────────────────
+
+
+  getClientes(): Observable<any[]> {
+    return this.snapCollection<any>(collection(this.db, 'clientes'));
+  }
+
+  async addCliente(cliente: any): Promise<void> {
+    await addDoc(collection(this.db, 'clientes'), cliente as any);
+  }
+
+  updateCliente(id: string, data: Partial<any>): Promise<void> {
+    return updateDoc(doc(this.db, `clientes/${id}`), data as any);
+  }
+
+  toggleClienteActivo(id: string, activo: boolean): Promise<void> {
+    return this.updateCliente(id, { activo });
+  }
+
+  // ─── Auto ────────────────────────────
+
+  getVehiculos(): Observable<any[]> {
+    return this.snapCollection<any>(collection(this.db, 'vehiculos'));
+  }
+
   // ─── ACTIVIDAD RECIENTE ────────────────────────────
   getActividadReciente(): Observable<ActividadReciente[]> {
     const q = query(collection(this.db, 'actividad'), orderBy('hora', 'desc'), limit(5));

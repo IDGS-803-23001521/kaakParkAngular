@@ -613,3 +613,27 @@ body { font-family: 'Segoe UI', sans-serif; background: var(--dark); color: #fff
 .btn-guardar:disabled, .btn-cancelar:disabled, .btn-icon:disabled {
   opacity: 0.4; cursor: not-allowed;
 }
+
+.pagos-page { display:flex; flex-direction:column; gap:1.5rem; }
+.pagos-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; align-items:start; }
+.reportes-filtros-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1rem; }
+.reportes-filtros-row label { display:block; font-size:0.78rem; color:#555; margin-bottom:6px; font-weight:600; }
+.reportes-filtros-row select { width:100%; background:#f6f6f6; border:1.5px solid #e5e5e5; border-radius:9px; padding:10px 12px; font-size:0.85rem; color:#222; outline:none; transition:border-color .18s; }
+.reportes-filtros-row select:focus { border-color:var(--gold); background:#fff; }
+.pagos-btn-generar { display:block; width:100%; }
+.pagos-tendencia-chart { display:flex; align-items:flex-end; justify-content:space-between; gap:10px; height:220px; padding-top:1.25rem; }
+.pagos-tendencia-barra-wrap { display:flex; flex-direction:column; align-items:center; flex:1; height:100%; justify-content:flex-end; }
+.pagos-tendencia-barra { width:55%; min-height:4px; background:linear-gradient(180deg, #e0bb4a, var(--gold)); border-radius:5px 5px 0 0; transition:height .2s; }
+.pagos-tendencia-mes { font-size:0.68rem; color:#999; margin-top:8px; text-transform:uppercase; }
+.pagos-historial-card { overflow-x:auto; }
+.pagos-tabla { width:100%; border-collapse:collapse; font-size:0.85rem; }
+.pagos-tabla th { text-align:left; padding:10px 12px; font-size:0.7rem; color:#999; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; border-bottom:1.5px solid #f0f0f0; }
+.pagos-tabla td { padding:12px 12px; border-bottom:1px solid #f5f5f5; color:#333; }
+.pagos-tabla tr:last-child td { border-bottom:none; }
+.pagos-tabla tr:hover td { background:#fafafa; }
+.pagos-estado-chip { display:inline-block; padding:4px 12px; border-radius:20px; font-size:0.72rem; font-weight:700; background:#e4e4e4; color:#555; }
+.pagos-estado-chip.completado { background:#f5ede0; color:var(--gold); }
+.pagos-estado-chip.pendiente { background:#e4e4e4; color:#555; }
+.pagos-estado-chip.fallido { background:#fdeeec; color:#c0392b; }
+.pagos-empty-msg { text-align:center; color:#bbb; padding:2.5rem 0; font-size:0.85rem; }
+@media (max-width:1024px) { .reportes-filtros-row { grid-template-columns:1fr; } .pagos-grid { grid-template-columns:1fr; } }

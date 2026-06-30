@@ -16,6 +16,8 @@ import { SustentabilidadComponent } from './components/sustentabilidad/sustentab
 import { UsuariosComponent }        from './components/usuarios/usuarios.component';
 import { ControlMotoresComponent }  from './components/motores/control-motores.component';
 import { HorariosComponent } from './components/horarios/horarios.component';
+import { ClientesComponent } from './components/clientes/clientes.component';
+import { PagosComponent } from './components/pagos/pagos.component';
 
 if (!getApps().length) {
   initializeApp(environment.firebase);
@@ -32,7 +34,9 @@ if (!getApps().length) {
     SustentabilidadComponent,
     UsuariosComponent,
     ControlMotoresComponent,
-    HorariosComponent
+    HorariosComponent,
+    ClientesComponent,
+    PagosComponent,
   ],
   imports: [
     BrowserModule,

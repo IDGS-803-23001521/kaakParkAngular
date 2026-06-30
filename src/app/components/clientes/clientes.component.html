@@ -1,0 +1,157 @@
+<app-navbar></app-navbar>
+<div class="page-bg page-bg-gears">
+  <div class="usuarios-wrap">
+
+    <div class="card-kaak usuarios-form-card">
+      <h5><span class="card-icon">{{ editando ? '✎' : '+' }}</span> {{ editando ? 'Editar cliente' : 'Agregar cliente' }}</h5>
+
+      <div class="form-grid-3">
+        <div class="form-group">
+          <label>Nombre</label>
+          <input type="text" placeholder="Nombre(s)" [(ngModel)]="fNombre" [class.input-error]="errores.nombre"
+            (input)="clearError('nombre')" />
+        </div>
+        <div class="form-group">
+          <label>Apellido paterno</label>
+          <input type="text" placeholder="Apellido paterno" [(ngModel)]="fApPat" [class.input-error]="errores.apPat"
+            (input)="clearError('apPat')" />
+        </div>
+        <div class="form-group">
+          <label>Apellido materno</label>
+          <input type="text" placeholder="Opcional" [(ngModel)]="fApMat" />
+        </div>
+
+        <div class="form-group">
+          <label>Sexo</label>
+          <div class="radio-row">
+            <label><input type="radio" name="sexo" value="M" [(ngModel)]="fSexo" /> Masculino</label>
+            <label><input type="radio" name="sexo" value="F" [(ngModel)]="fSexo" /> Femenino</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Fecha de ingreso</label>
+          <input type="date" [(ngModel)]="fFecha" />
+        </div>
+      </div>
+
+      <div class="form-alert-inline" *ngIf="errorMensaje">
+        <span class="alert-icon">⚠</span>
+        <span>{{ errorMensaje }}</span>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-cancelar" (click)="editando ? cancelarEdicion() : limpiarForm()">
+          {{ editando ? 'Cancelar edición' : 'Cancelar' }}
+        </button>
+        <button class="btn-guardar" (click)="guardarCliente()">
+          {{ editando ? 'Guardar cambios' : 'Guardar cliente' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="card-kaak usuarios-table-card">
+      <div class="tabs-row">
+        <button class="tab-btn" [class.active]="tabActual==='activos'" (click)="cambiarTab('activos')">
+          Activos <span class="tab-count" [class.tab-count-gold]="tabActual==='activos'">{{ activos.length }}</span>
+        </button>
+        <button class="tab-btn" [class.active]="tabActual==='inactivos'" (click)="cambiarTab('inactivos')">
+          Inactivos <span class="tab-count">{{ inactivos.length }}</span>
+        </button>
+      </div>
+
+      <div class="filtros-row">
+        <input type="text" class="filtro-input" placeholder="Buscar por nombre..." [(ngModel)]="filtroNombre"
+          (input)="onFiltroChange()" />
+        <button class="btn-limpiar-filtro" *ngIf="filtroNombre" (click)="limpiarFiltros()">✕ Limpiar</button>
+      </div>
+
+      <ng-container *ngIf="tabActual==='activos'">
+        <div class="table-head-row table-cols-activos">
+          <span style="padding-left:37px;">Nombre</span>
+          <span>Usuario asignado</span>
+          <span style="text-align:center;">Acciones</span>
+        </div>
+        <div *ngFor="let c of listaPaginada" class="user-row table-cols-activos">
+          <div class="user-name-cell">
+            <div class="avatar-initials">
+              <span>{{ initials(c.nombre) }}</span>
+            </div>
+            <strong>{{ c.nombre }}</strong>
+          </div>
+          <span class="u-puesto">{{ c.usuario }}</span>
+          <div class="acciones-cell">
+            <button class="btn-cred" (click)="abrirModalVehiculos(c)">🚗 Vehículos</button>
+            <button class="btn-icon" title="Editar" (click)="editarCliente(c)">✏️</button>
+            <button class="btn-icon btn-icon-eliminar" title="Eliminar" (click)="solicitarEliminar(c)">🗑</button>
+            <button class="toggle-btn" title="Inactivar" (click)="inactivarCliente(c)">✓</button>
+          </div>
+        </div>
+        <div *ngIf="listaPaginada.length===0" class="empty-msg">Sin clientes que coincidan con la búsqueda</div>
+      </ng-container>
+
+      <ng-container *ngIf="tabActual==='inactivos'">
+        <div class="table-head-row table-cols-inactivos">
+          <span style="padding-left:37px;">Nombre</span>
+          <span>Usuario asignado</span>
+          <span style="text-align:center;">Acciones</span>
+        </div>
+        <div *ngFor="let c of listaPaginada" class="user-row user-row-inactivo table-cols-inactivos">
+          <div class="user-name-cell">
+            <div class="avatar-initials avatar-inactivo">
+              <span>{{ initials(c.nombre) }}</span>
+            </div>
+            <strong>{{ c.nombre }}</strong>
+          </div>
+          <span class="u-puesto">{{ c.usuario }}</span>
+          <div class="acciones-cell">
+            <button class="btn-icon" title="Editar" (click)="editarCliente(c)">✏️</button>
+            <button class="btn-icon btn-icon-eliminar" title="Eliminar" (click)="solicitarEliminar(c)">🗑</button>
+            <button class="toggle-btn-inactivo" title="Activar" (click)="activarCliente(c)">✓</button>
+          </div>
+        </div>
+        <div *ngIf="listaPaginada.length===0" class="empty-msg">Sin clientes que coincidan con la búsqueda</div>
+      </ng-container>
+
+      <div class="paginacion-row" *ngIf="listaFiltrada.length > clientesPorPagina">
+        <button class="btn-pagina" [disabled]="paginaActual===1" (click)="paginaAnterior()">‹ Anterior</button>
+        <span class="pagina-info">Página {{ paginaActual }} de {{ totalPaginas }} · {{ listaFiltrada.length }} clientes</span>
+        <button class="btn-pagina" [disabled]="paginaActual===totalPaginas" (click)="paginaSiguiente()">Siguiente ›</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div *ngIf="mostrarModalVehiculos" class="modal-overlay">
+  <div class="modal-card">
+    <div style="font-size:1.8rem;margin-bottom:0.5rem;">🚗</div>
+    <h5>Vehículos registrados</h5>
+    <p class="modal-sub" *ngIf="clienteSeleccionado">Cliente: <strong>{{ clienteSeleccionado.nombre }}</strong></p>
+    
+    <div class="modal-creds" style="max-height: 200px; overflow-y: auto;">
+      <div *ngFor="let v of vehiculosFiltrados; let idx = index" style="margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #eee;">
+        <div class="modal-cred-label">Vehículo #{{ idx + 1 }}</div>
+        <div class="modal-cred-value">Placas: {{ v.placas }} {{ v.modelo ? '· Modelo: ' + v.modelo : '' }}</div>
+      </div>
+      <div *ngIf="vehiculosFiltrados.length === 0" class="empty-msg" style="padding: 10px 0;">
+        Este cliente no tiene vehículos asociados.
+      </div>
+    </div>
+    
+    <button class="btn-guardar" style="width:100%; margin-top: 15px;" (click)="cerrarModalVehiculos()">Cerrar</button>
+  </div>
+</div>
+
+<div *ngIf="mostrarConfirmEliminar" class="modal-overlay">
+  <div class="modal-card modal-confirm">
+    <div class="modal-confirm-icon">🗑</div>
+    <h5>¿Eliminar cliente?</h5>
+    <p class="modal-sub" *ngIf="clienteAEliminar">
+      Estás por eliminar a <strong>{{ clienteAEliminar.nombre }}</strong>. Esta acción ocultará al cliente del sistema y podrás restaurarlo solo desde la base de datos.
+    </p>
+    <div class="form-actions" style="justify-content:center; margin-top:1.25rem;">
+      <button class="btn-cancelar" (click)="cancelarEliminar()">Cancelar</button>
+      <button class="btn-eliminar-confirm" (click)="confirmarEliminar()">Sí, eliminar</button>
+    </div>
+  </div>
+</div>

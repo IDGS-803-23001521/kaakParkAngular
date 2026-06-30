@@ -10,6 +10,8 @@ import { SustentabilidadComponent } from './components/sustentabilidad/sustentab
 import { UsuariosComponent }        from './components/usuarios/usuarios.component';
 import { ControlMotoresComponent } from './components/motores/control-motores.component';
 import { HorariosComponent } from './components/horarios/horarios.component';
+import { ClientesComponent }        from './components/clientes/clientes.component'; 
+import { PagosComponent }        from './components/pagos/pagos.component'; 
 
 const routes: Routes = [
   { path: '',             redirectTo: '/login', pathMatch: 'full' },
@@ -19,6 +21,8 @@ const routes: Routes = [
   { path: 'reportes',         component: ReportesComponent,        canActivate: [AuthGuard] },
   { path: 'sustentabilidad',  component: SustentabilidadComponent, canActivate: [AuthGuard] },
   { path: 'usuarios',         component: UsuariosComponent,        canActivate: [AuthGuard] },
+  { path: 'clientes',         component: ClientesComponent,        canActivate: [AuthGuard] },
+  { path: 'pagos',         component: PagosComponent,        canActivate: [AuthGuard] },
   { path: 'control-motores', component: ControlMotoresComponent },
   { path: 'horarios', component: HorariosComponent, canActivate: [AuthGuard] },
   { path: '**', redirectTo: '/login' }
