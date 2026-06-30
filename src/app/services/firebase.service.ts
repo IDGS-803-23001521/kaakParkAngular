@@ -11,6 +11,7 @@ import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { Observable } from 'rxjs';
 import { Cajon, Usuario, ActividadReciente, SustentabilidadData, ReporteHistorial } from '../models/kaakpark.models';
 import { environment } from '../../environments/environment';
+import { Secuencia } from '../services/mqtt-robot.service';
 
 @Injectable({ providedIn: 'root' })
 export class FirebaseService {
@@ -54,6 +55,19 @@ export class FirebaseService {
     return updateDoc(doc(this.db, `${this.CAJONES_COL}/${id}`), data as any);
   }
 
+  
+getSecuencias(): Observable<Secuencia[]> {
+  return this.snapCollection<Secuencia>(collection(this.db, 'secuencias'));
+}
+ 
+addSecuencia(s: Secuencia): Promise<any> {
+  return addDoc(collection(this.db, 'secuencias'), s);
+}
+ 
+updateSecuencia(id: string, cambios: Partial<Secuencia>): Promise<void> {
+  return updateDoc(doc(this.db, `secuencias/${id}`), cambios as any);
+}
+
   async seedCajonesIfEmpty(): Promise<void> {
     const snap = await getDocs(collection(this.db, this.CAJONES_COL));
     if (!snap.empty) return;
@@ -95,6 +109,31 @@ export class FirebaseService {
     }
   }
 
+    // ─── ACTIVIDAD CLIENTES ────────────────────────────
+
+
+  getClientes(): Observable<any[]> {
+    return this.snapCollection<any>(collection(this.db, 'clientes'));
+  }
+
+  async addCliente(cliente: any): Promise<void> {
+    await addDoc(collection(this.db, 'clientes'), cliente as any);
+  }
+
+  updateCliente(id: string, data: Partial<any>): Promise<void> {
+    return updateDoc(doc(this.db, `clientes/${id}`), data as any);
+  }
+
+  toggleClienteActivo(id: string, activo: boolean): Promise<void> {
+    return this.updateCliente(id, { activo });
+  }
+
+  // ─── Auto ────────────────────────────
+
+  getVehiculos(): Observable<any[]> {
+    return this.snapCollection<any>(collection(this.db, 'vehiculos'));
+  }
+
   // ─── ACTIVIDAD RECIENTE ────────────────────────────
   getActividadReciente(): Observable<ActividadReciente[]> {
     const q = query(collection(this.db, 'actividad'), orderBy('hora', 'desc'), limit(5));
@@ -134,4 +173,5 @@ export class FirebaseService {
   async addReporte(reporte: ReporteHistorial): Promise<void> {
     await addDoc(collection(this.db, 'reportes'), reporte as any);
   }
+  
 }

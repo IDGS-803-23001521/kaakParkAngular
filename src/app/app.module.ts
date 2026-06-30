@@ -14,7 +14,10 @@ import { CajonesComponent }         from './components/cajones/cajones.component
 import { ReportesComponent }        from './components/reportes/reportes.component';
 import { SustentabilidadComponent } from './components/sustentabilidad/sustentabilidad.component';
 import { UsuariosComponent }        from './components/usuarios/usuarios.component';
+import { ControlMotoresComponent }  from './components/motores/control-motores.component';
 import { HorariosComponent } from './components/horarios/horarios.component';
+import { ClientesComponent } from './components/clientes/clientes.component';
+import { PagosComponent } from './components/pagos/pagos.component';
 
 if (!getApps().length) {
   initializeApp(environment.firebase);
@@ -30,7 +33,10 @@ if (!getApps().length) {
     ReportesComponent,
     SustentabilidadComponent,
     UsuariosComponent,
-    HorariosComponent
+    ControlMotoresComponent,
+    HorariosComponent,
+    ClientesComponent,
+    PagosComponent,
   ],
   imports: [
     BrowserModule,

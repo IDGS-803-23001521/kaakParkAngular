@@ -1,0 +1,96 @@
+<app-navbar></app-navbar>
+<div class="page-bg page-bg-gears">
+  <div class="pagos-page">
+
+    <div class="card-kaak">
+      <div class="reportes-filtros-row">
+        <div>
+          <label>Rango de fecha</label>
+          <select [(ngModel)]="rangoSeleccionado">
+            <option>Últimos 7 días</option>
+            <option>Últimos 30 días</option>
+            <option>Este mes</option>
+            <option>Este año</option>
+          </select>
+        </div>
+        <div>
+          <label>Método de pago</label>
+          <select [(ngModel)]="metodoSeleccionado">
+            <option>Todos</option>
+            <option>Tarjeta</option>
+            <option>Efectivo</option>
+            <option>Transferencia</option>
+          </select>
+        </div>
+        <div>
+          <label>Estado</label>
+          <select [(ngModel)]="estadoSeleccionado">
+            <option>Todos</option>
+            <option>Completado</option>
+            <option>Pendiente</option>
+            <option>Por cobrar</option>
+            <option>Fallido</option>
+            <option>Cancelado</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn-guardar pagos-btn-generar">Generar reporte</button>
+    </div>
+
+    <div class="pagos-grid">
+
+      <div class="card-kaak">
+        <h5>Tendencia de Ingresos (Año actual)</h5>
+        <div class="pagos-tendencia-chart" *ngIf="tendenciaIngresos.length > 0">
+          <div *ngFor="let t of tendenciaIngresos" class="pagos-tendencia-barra-wrap">
+            <div class="pagos-tendencia-barra" [style.height.%]="alturaBarra(t.monto)"></div>
+            <span class="pagos-tendencia-mes">{{ t.mes }}</span>
+          </div>
+        </div>
+        <div *ngIf="tendenciaIngresos.length === 0" class="pagos-empty-msg">
+          Aún no hay datos de ingresos para mostrar
+        </div>
+      </div>
+
+      <div class="card-kaak pagos-historial-card">
+        <h5>Historial de Pagos</h5>
+        <table class="pagos-tabla" *ngIf="historialPagos.length > 0">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Cliente</th>
+              <th>Fecha</th>
+              <th>Monto</th>
+              <th>Método</th>
+              <th>Tipo</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of historialPagos">
+              <td>{{ p.id }}</td>
+              <td>{{ p.cliente }}</td>
+              <td>{{ p.fecha }}</td>
+              <td>${{ p.monto }}</td>
+              <td>{{ p.metodo }}</td>
+              <td>{{ p.tipo }}</td>
+              <td>
+                <span class="pagos-estado-chip"
+                      [class.completado]="p.estado === 'Completado' || p.estado === 'Cobrado'"
+                      [class.pendiente]="p.estado === 'Pendiente' || p.estado === 'Por cobrar'"
+                      [class.fallido]="p.estado === 'Fallido' || p.estado === 'Cancelado'">
+                  {{ p.estado }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div *ngIf="historialPagos.length === 0" class="pagos-empty-msg">
+          Aún no se han recibido pagos desde la app
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>

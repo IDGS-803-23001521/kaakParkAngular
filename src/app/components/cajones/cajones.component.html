@@ -77,6 +77,39 @@
           </tbody>
         </table>
       </div>
+
+      <div class="card-kaak">
+        <h5>Secuencias por cajón</h5>
+        <div class="motor-hint">Elige qué secuencia mueve los motores al guardar y al recoger el coche en cada cajón. Puedes cambiarla cuando quieras.</div>
+
+        <div class="cajon-seq-row" *ngFor="let cj of cajones">
+          <div class="cajon-seq-label">N{{cj.nivel}} · Cajón {{cj.numeroCajon}}</div>
+
+          <div class="cajon-seq-control">
+            <span class="cajon-seq-tag">Ingreso</span>
+            <select class="filtro-select" [ngModel]="cj.secuenciaIngresoId || ''"
+              (ngModelChange)="vincularSecuencia(cj, 'ingreso', $event)">
+              <option value="">Sin asignar</option>
+              <option *ngFor="let s of secuencias" [value]="s.id">{{ s.nombre }}</option>
+            </select>
+            <button class="btn-icon" title="Ejecutar ingreso"
+              [disabled]="!cj.secuenciaIngresoId || cj.estado==='Ocupado' || ocupado"
+              (click)="ejecutarSecuenciaCajon(cj, 'ingreso')">▶</button>
+          </div>
+
+          <div class="cajon-seq-control">
+            <span class="cajon-seq-tag">Salida</span>
+            <select class="filtro-select" [ngModel]="cj.secuenciaSalidaId || ''"
+              (ngModelChange)="vincularSecuencia(cj, 'salida', $event)">
+              <option value="">Sin asignar</option>
+              <option *ngFor="let s of secuencias" [value]="s.id">{{ s.nombre }}</option>
+            </select>
+            <button class="btn-icon" title="Ejecutar salida"
+              [disabled]="!cj.secuenciaSalidaId || cj.estado!=='Ocupado' || ocupado"
+              (click)="ejecutarSecuenciaCajon(cj, 'salida')">▶</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div style="display:flex;flex-direction:column;gap:1rem;">
@@ -132,4 +165,8 @@
     </div>
 
   </div>
+</div>
+
+<div class="motor-toast" [class.show]="toastVisible" [class.ok]="toastTipo==='ok'" [class.err]="toastTipo==='err'" [class.info]="toastTipo==='info'">
+  {{ toastMsg }}
 </div>

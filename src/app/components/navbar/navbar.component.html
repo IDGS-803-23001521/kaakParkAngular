@@ -3,33 +3,56 @@
 
   <div class="nav-izquierda">
     <a routerLink="/dashboard" [class.active]="isActive('/dashboard')">
-      <img src="assets/images/DashB.png" alt=""/><span>Dashboard</span>
+      <img src="assets/images/DashB.png" alt="" /><span>Dashboard</span>
     </a>
-    <a routerLink="/horarios" [class.active]="isActive('/horarios')">
-      <img src="assets/images/RelojB.png" alt=""/><span>Horarios</span>
+    <a routerLink="/reportes" [class.active]="isActive('/reportes')">
+      <img src="assets/images/GraficoB.png" alt="" /><span>Reportes y Analítica</span>
     </a>
     <a routerLink="/cajones" [class.active]="isActive('/cajones')">
-      <img src="assets/images/CajonPB.png" alt=""/><span>Cajones</span>
+      <img src="assets/images/CajonPB.png" alt="" /><span>Cajones</span>
+    </a>
+    <a routerLink="/pagos" [class.active]="isActive('/pagos')">
+      <img src="assets/images/Pago.png" alt="" /><span>Pagos</span>
+    </a>
+    <a routerLink="/control-motores" [class.active]="isActive('/control-motores')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+        stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3" />
+        <path
+          d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+      </svg>
+      <span>Control de Motores</span>
     </a>
   </div>
 
   <div class="nav-logo-center">
-    <img src="assets/images/Logo.png" alt="K'áaxPark"/>
+    <img src="assets/images/Logo.png" alt="K'áaxPark" />
   </div>
 
   <div class="nav-derecha">
-    <a routerLink="/reportes" [class.active]="isActive('/reportes')">
-      <img src="assets/images/GraficoB.png" alt=""/><span>Reportes y Analítica</span>
+    <a routerLink="/horarios" [class.active]="isActive('/horarios')">
+      <img src="assets/images/RelojB.png" alt="" /><span>Horarios</span>
     </a>
     <a routerLink="/sustentabilidad" [class.active]="isActive('/sustentabilidad')">
-      <img src="assets/images/SosteB.png" alt=""/><span>Sustentabilidad</span>
+      <img src="assets/images/SosteB.png" alt="" /><span>Sustentabilidad</span>
+    </a>
+    <a routerLink="/usuarios" [class.active]="isActive('/usuarios')">
+      <img src="assets/images/UsuarioD.png" alt="" /><span>Usuarios</span>
+    </a>
+    <a routerLink="/clientes" [class.active]="isActive('/clientes')">
+      <img src="assets/images/UsuarioD.png" alt="" /><span>clientes</span>
     </a>
   </div>
 
   <div class="nav-right">
-    <a routerLink="/usuarios" class="nav-avatar-btn" [class.active-avatar]="isActive('/usuarios')">
-      <span class="nav-plus">+</span>
-      <img src="assets/images/avatar.png" alt="Admin"/>
-    </a>
+    <button class="nav-logout-btn" (click)="onLogout()" title="Cerrar sesión">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+        <polyline points="16 17 21 12 16 7" />
+        <line x1="21" y1="12" x2="9" y2="12" />
+      </svg>
+      <span>Salir</span>
+    </button>
   </div>
 </nav>
