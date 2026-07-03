@@ -12,34 +12,26 @@
     <div class="dash-stat-card">
       <div class="label">Entradas Hoy</div>
       <div class="big-num" style="color:#111;">{{ entradasHoy }}</div>
-      <div class="trend-up">↑ 12%</div>
     </div>
     <div class="dash-stat-card">
       <div class="label">Salidas Hoy</div>
       <div class="big-num" style="color:#111;">{{ salidasHoy }}</div>
-      <div class="trend-down">↓ -6%</div>
     </div>
     <div class="dash-stat-card">
       <div class="label">Tiempo Prom. Estancia</div>
-      <div class="tiempo-digital">
-        <span class="digit">{{ horas }}</span><span class="sep">:</span>
-        <span class="digit">{{ minutos }}</span><span class="sep">:</span>
-        <span class="digit">{{ segundos }}</span>
-      </div>
-      <div class="tiempo-sub">
-        <span>Horas</span><span>Minutos</span><span>Segundos</span>
-      </div>
+      <div class="big-num" style="color:#111;">{{ tiempoPromedioEstancia }}</div>
+      <div style="font-size:0.72rem;color:#888;margin-top:4px;">promedio de estancias completadas hoy</div>
     </div>
   </div>
 
   <div class="dash-grid-bottom">
     <div class="card-kaak">
       <h5 style="font-weight:500;font-size:0.95rem;">Ocupación Por Hora</h5>
-      <canvas #lineCanvas height="110"></canvas>
+      <div class="chart-fill"><canvas #lineCanvas></canvas></div>
     </div>
-<div class="card-kaak">
+<div class="card-kaak card-scroll">
       <h5>Actividad Reciente</h5>
-      <div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-start;">
+      <div class="card-scroll-body" style="display: flex; flex-direction: column; justify-content: flex-start;">
         <div *ngIf="actividad.length === 0" style="text-align:center; color:#bbb; padding:1.5rem; font-size:0.85rem; margin: auto 0;">
           Sin actividad registrada aún
         </div>

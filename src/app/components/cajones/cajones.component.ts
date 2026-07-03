@@ -1,7 +1,7 @@
 import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { FirebaseService } from '../../services/firebase.service';
 import { MqttRobotService, Secuencia } from '../../services/mqtt-robot.service';
-import { Cajon } from '../../models/kaakpark.models';
+import { ActividadReciente, Cajon } from '../../models/kaakpark.models';
 import { Subscription } from 'rxjs';
 
 declare const Chart: any;
@@ -16,8 +16,10 @@ export class CajonesComponent implements OnInit, AfterViewInit, OnDestroy {
 
   cajones: Cajon[] = [];
   secuencias: Secuencia[] = [];
+  actividadHoy: ActividadReciente[] = [];
   niveles = [3, 2, 1];
   tiempoAhora = new Date();
+  tabDetalle: 'detalle' | 'secuencias' = 'detalle';
 
   toastMsg = '';
   toastTipo: 'ok' | 'err' | 'info' = 'info';
@@ -52,10 +54,13 @@ export class CajonesComponent implements OnInit, AfterViewInit, OnDestroy {
       .sort((a, b) => b.tiempoMin - a.tiempoMin);
   }
 
+  /** Promedio real de estancias YA COMPLETADAS hoy (no de los autos que siguen dentro). */
   get tiempoPromedioOcupacion(): string {
-    const lista = this.cajonesOcupadosConTiempo;
-    if (!lista.length) return '—';
-    const avg = Math.round(lista.reduce((s, c) => s + c.tiempoMin, 0) / lista.length);
+    const duraciones = this.actividadHoy
+      .filter(a => a.tipo === 'salida' && typeof a.duracionMin === 'number')
+      .map(a => a.duracionMin as number);
+    if (!duraciones.length) return '—';
+    const avg = Math.round(duraciones.reduce((s, m) => s + m, 0) / duraciones.length);
     return this.formatTiempo(avg);
   }
 
@@ -80,6 +85,10 @@ export class CajonesComponent implements OnInit, AfterViewInit, OnDestroy {
       this.fb.getSecuencias().subscribe(secs => {
         this.secuencias = (secs || []).filter(s => !s.eliminado);
       })
+    );
+    const hoy = new Date().toISOString().slice(0, 10);
+    this.subs.push(
+      this.fb.getActividadPorFecha(hoy).subscribe(act => { this.actividadHoy = act; })
     );
     this.timeInterval = setInterval(() => { this.tiempoAhora = new Date(); }, 60000);
   }
@@ -108,11 +117,35 @@ export class CajonesComponent implements OnInit, AfterViewInit, OnDestroy {
     const ahora = new Date();
     const horaEntrada = ahora.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
     await this.fb.updateCajon(cajon.id, { estado: 'Ocupado', horaEntrada });
+    await this.registrarActividad('entrada', cajon, ahora);
   }
 
   async desocupar(cajon: Cajon): Promise<void> {
     if (!cajon.id || cajon.estado !== 'Ocupado') return;
     await this.fb.updateCajon(cajon.id, { estado: 'Libre', horaEntrada: '', placa: '' });
+    await this.registrarActividad('salida', cajon, new Date());
+  }
+
+  private async registrarActividad(tipo: 'entrada' | 'salida', cajon: Cajon, ahora: Date): Promise<void> {
+    const actividad: ActividadReciente = {
+      tipo,
+      descripcion: `Nivel ${cajon.nivel} · Cajón ${cajon.numeroCajon}`,
+      hora: ahora.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false }),
+      fecha: ahora.toISOString().slice(0, 10),
+      timestamp: ahora.getTime(),
+      placa: cajon.placa || ''
+    };
+
+    // En la salida, cajon.horaEntrada todavía trae la hora original (se lee antes de refrescarse
+    // por el snapshot de Firestore), así que aquí sí podemos calcular cuánto duró la estancia.
+    if (tipo === 'salida' && cajon.horaEntrada) {
+      const [h, m] = cajon.horaEntrada.split(':').map(Number);
+      const entrada = new Date(ahora);
+      entrada.setHours(h, m, 0, 0);
+      actividad.duracionMin = Math.max(0, Math.round((ahora.getTime() - entrada.getTime()) / 60000));
+    }
+
+    await this.fb.addActividad(actividad);
   }
 
   async toggleMantenimiento(cajon: Cajon): Promise<void> {
@@ -153,11 +186,14 @@ export class CajonesComponent implements OnInit, AfterViewInit, OnDestroy {
       // El estado sigue siendo editable a mano (Ocupar/Desocupar en la tabla);
       // esto solo lo refleja automáticamente cuando la secuencia corrió bien.
       if (cajon.id) {
+        const ahora = new Date();
         if (tipo === 'ingreso') {
-          const horaEntrada = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+          const horaEntrada = ahora.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
           await this.fb.updateCajon(cajon.id, { estado: 'Ocupado', horaEntrada });
+          await this.registrarActividad('entrada', cajon, ahora);
         } else {
           await this.fb.updateCajon(cajon.id, { estado: 'Libre', horaEntrada: '', placa: '' });
+          await this.registrarActividad('salida', cajon, ahora);
         }
       }
       this.toast(`"${secuencia.nombre}" ejecutada`, 'ok');

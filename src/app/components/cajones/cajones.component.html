@@ -2,10 +2,10 @@
 <div class="page-bg page-bg-gears">
   <div class="cajones-layout">
 
-    <div style="display:flex;flex-direction:column;gap:1rem;">
+    <div class="cajones-col-left">
       <div class="card-kaak">
         <h5>Resumen de cajones por nivel</h5>
-        <div style="display:flex;gap:2rem;align-items:stretch;min-height:320px;">
+        <div style="display:flex;gap:2rem;align-items:stretch;min-height:220px;">
 
           <div class="estructura-elevador" style="flex:0 0 auto;align-self:stretch;">
             <div class="estructura-col" style="flex:1;">
@@ -39,9 +39,14 @@
         </div>
       </div>
 
-      <div class="card-kaak">
-        <h5>Detalle de Cajones</h5>
-        <table class="cajones-table">
+      <div class="card-kaak card-scroll" style="flex:1;">
+        <div class="tabs-row" style="flex-shrink:0;">
+          <button class="tab-btn" [class.active]="tabDetalle==='detalle'" (click)="tabDetalle='detalle'">Detalle de Cajones</button>
+          <button class="tab-btn" [class.active]="tabDetalle==='secuencias'" (click)="tabDetalle='secuencias'">Secuencias por cajón</button>
+        </div>
+
+        <div class="card-scroll-body">
+        <table class="cajones-table" *ngIf="tabDetalle==='detalle'">
           <thead><tr><th>Nivel</th><th>Cajón</th><th>Estado</th><th>Placa</th><th>Hora Entrada</th><th>Acciones</th></tr></thead>
           <tbody>
             <tr *ngFor="let cj of cajones">
@@ -76,43 +81,42 @@
             </tr>
           </tbody>
         </table>
-      </div>
 
-      <div class="card-kaak">
-        <h5>Secuencias por cajón</h5>
-        <div class="motor-hint">Elige qué secuencia mueve los motores al guardar y al recoger el coche en cada cajón. Puedes cambiarla cuando quieras.</div>
+        <ng-container *ngIf="tabDetalle==='secuencias'">
+          <div class="motor-hint">Elige qué secuencia mueve los motores al guardar y al recoger el coche en cada cajón. Puedes cambiarla cuando quieras.</div>
+          <div class="cajon-seq-row" *ngFor="let cj of cajones">
+            <div class="cajon-seq-label">N{{cj.nivel}} · Cajón {{cj.numeroCajon}}</div>
 
-        <div class="cajon-seq-row" *ngFor="let cj of cajones">
-          <div class="cajon-seq-label">N{{cj.nivel}} · Cajón {{cj.numeroCajon}}</div>
+            <div class="cajon-seq-control">
+              <span class="cajon-seq-tag">Ingreso</span>
+              <select class="filtro-select" [ngModel]="cj.secuenciaIngresoId || ''"
+                (ngModelChange)="vincularSecuencia(cj, 'ingreso', $event)">
+                <option value="">Sin asignar</option>
+                <option *ngFor="let s of secuencias" [value]="s.id">{{ s.nombre }}</option>
+              </select>
+              <button class="btn-icon" title="Ejecutar ingreso"
+                [disabled]="!cj.secuenciaIngresoId || cj.estado==='Ocupado' || ocupado"
+                (click)="ejecutarSecuenciaCajon(cj, 'ingreso')">▶</button>
+            </div>
 
-          <div class="cajon-seq-control">
-            <span class="cajon-seq-tag">Ingreso</span>
-            <select class="filtro-select" [ngModel]="cj.secuenciaIngresoId || ''"
-              (ngModelChange)="vincularSecuencia(cj, 'ingreso', $event)">
-              <option value="">Sin asignar</option>
-              <option *ngFor="let s of secuencias" [value]="s.id">{{ s.nombre }}</option>
-            </select>
-            <button class="btn-icon" title="Ejecutar ingreso"
-              [disabled]="!cj.secuenciaIngresoId || cj.estado==='Ocupado' || ocupado"
-              (click)="ejecutarSecuenciaCajon(cj, 'ingreso')">▶</button>
+            <div class="cajon-seq-control">
+              <span class="cajon-seq-tag">Salida</span>
+              <select class="filtro-select" [ngModel]="cj.secuenciaSalidaId || ''"
+                (ngModelChange)="vincularSecuencia(cj, 'salida', $event)">
+                <option value="">Sin asignar</option>
+                <option *ngFor="let s of secuencias" [value]="s.id">{{ s.nombre }}</option>
+              </select>
+              <button class="btn-icon" title="Ejecutar salida"
+                [disabled]="!cj.secuenciaSalidaId || cj.estado!=='Ocupado' || ocupado"
+                (click)="ejecutarSecuenciaCajon(cj, 'salida')">▶</button>
+            </div>
           </div>
-
-          <div class="cajon-seq-control">
-            <span class="cajon-seq-tag">Salida</span>
-            <select class="filtro-select" [ngModel]="cj.secuenciaSalidaId || ''"
-              (ngModelChange)="vincularSecuencia(cj, 'salida', $event)">
-              <option value="">Sin asignar</option>
-              <option *ngFor="let s of secuencias" [value]="s.id">{{ s.nombre }}</option>
-            </select>
-            <button class="btn-icon" title="Ejecutar salida"
-              [disabled]="!cj.secuenciaSalidaId || cj.estado!=='Ocupado' || ocupado"
-              (click)="ejecutarSecuenciaCajon(cj, 'salida')">▶</button>
-          </div>
+        </ng-container>
         </div>
       </div>
     </div>
 
-    <div style="display:flex;flex-direction:column;gap:1rem;">
+    <div class="cajones-col-right">
       <div class="card-kaak" style="text-align:center;">
         <h5 style="text-align:left;">Capacidad Total</h5>
         <div style="display:flex;justify-content:center;margin:0.5rem 0;">
@@ -145,12 +149,14 @@
           </div>
         </div>
       </div>
-      <div class="card-kaak" style="flex: 1;">
+      <div class="card-kaak card-scroll" style="flex: 1;">
         <h5>Tiempo promedio de ocupación</h5>
-        <div style="text-align:center;padding:0.5rem 0 1rem;">
+        <div style="text-align:center;padding:0.5rem 0 1rem;flex-shrink:0;">
           <div style="font-size:2.4rem;font-weight:800;color:#111;line-height:1;">{{tiempoPromedioOcupacion}}</div>
-          <div style="font-size:0.72rem;color:#888;margin-top:4px;">promedio actual de estancia</div>
+          <div style="font-size:0.72rem;color:#888;margin-top:4px;">promedio de estancias completadas hoy</div>
         </div>
+        <div style="font-size:0.72rem;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;flex-shrink:0;">Actualmente dentro</div>
+        <div class="card-scroll-body">
         <div *ngFor="let c of cajonesOcupadosConTiempo"
           style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #f0f0f0;font-size:0.82rem;">
           <span style="font-weight:700;color:#333;">N{{c.nivel}} · C{{c.numeroCajon}}</span>
@@ -160,6 +166,7 @@
         <div *ngIf="cajonesOcupadosConTiempo.length===0"
           style="text-align:center;color:#bbb;padding:1rem;font-size:0.83rem;">
           Sin cajones ocupados con registro de hora
+        </div>
         </div>
       </div>
     </div>
