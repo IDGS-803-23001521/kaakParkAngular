@@ -1,20 +1,29 @@
-<nav class="navbar-kaak">
-  <div class="nav-left"></div>
+<button class="sidebar-toggle-mobile" (click)="toggleMobile()" aria-label="Abrir menú">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+    stroke-linecap="round" stroke-linejoin="round">
+    <line x1="3" y1="6" x2="21" y2="6" />
+    <line x1="3" y1="12" x2="21" y2="12" />
+    <line x1="3" y1="18" x2="21" y2="18" />
+  </svg>
+</button>
 
-  <div class="nav-izquierda">
-    <a routerLink="/dashboard" [class.active]="isActive('/dashboard')">
+<div class="sidebar-overlay" *ngIf="mobileOpen" (click)="closeMobile()"></div>
+
+<nav class="sidebar-kaak" [class.open]="mobileOpen">
+  <div class="sidebar-logo">
+    <img src="assets/images/Logo.png" alt="K'áaxPark" />
+    <span class="sidebar-brand">K'áax<strong>Park</strong></span>
+  </div>
+
+  <div class="sidebar-nav">
+    <span class="sidebar-section-label">Operación</span>
+    <a routerLink="/dashboard" class="sidebar-link" [class.active]="isActive('/dashboard')" (click)="closeMobile()">
       <img src="assets/images/DashB.png" alt="" /><span>Dashboard</span>
     </a>
-    <a routerLink="/reportes" [class.active]="isActive('/reportes')">
-      <img src="assets/images/GraficoB.png" alt="" /><span>Reportes y Analítica</span>
-    </a>
-    <a routerLink="/cajones" [class.active]="isActive('/cajones')">
+    <a routerLink="/cajones" class="sidebar-link" [class.active]="isActive('/cajones')" (click)="closeMobile()">
       <img src="assets/images/CajonPB.png" alt="" /><span>Cajones</span>
     </a>
-    <a routerLink="/pagos" [class.active]="isActive('/pagos')">
-      <img src="assets/images/Pago.png" alt="" /><span>Pagos</span>
-    </a>
-    <a routerLink="/control-motores" [class.active]="isActive('/control-motores')">
+    <a routerLink="/control-motores" class="sidebar-link" [class.active]="isActive('/control-motores')" (click)="closeMobile()">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
         stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="3" />
@@ -23,36 +32,37 @@
       </svg>
       <span>Control de Motores</span>
     </a>
-  </div>
-
-  <div class="nav-logo-center">
-    <img src="assets/images/Logo.png" alt="K'áaxPark" />
-  </div>
-
-  <div class="nav-derecha">
-    <a routerLink="/horarios" [class.active]="isActive('/horarios')">
+    <a routerLink="/horarios" class="sidebar-link" [class.active]="isActive('/horarios')" (click)="closeMobile()">
       <img src="assets/images/RelojB.png" alt="" /><span>Horarios</span>
     </a>
-    <a routerLink="/sustentabilidad" [class.active]="isActive('/sustentabilidad')">
-      <img src="assets/images/SosteB.png" alt="" /><span>Sustentabilidad</span>
+
+    <span class="sidebar-section-label">Gestión</span>
+    <a routerLink="/pagos" class="sidebar-link" [class.active]="isActive('/pagos')" (click)="closeMobile()">
+      <img src="assets/images/Pago.png" alt="" /><span>Pagos</span>
     </a>
-    <a routerLink="/usuarios" [class.active]="isActive('/usuarios')">
+    <a routerLink="/clientes" class="sidebar-link" [class.active]="isActive('/clientes')" (click)="closeMobile()">
+      <img src="assets/images/UsuarioD.png" alt="" /><span>Clientes</span>
+    </a>
+    <a routerLink="/usuarios" class="sidebar-link" [class.active]="isActive('/usuarios')" (click)="closeMobile()">
       <img src="assets/images/UsuarioD.png" alt="" /><span>Usuarios</span>
     </a>
-    <a routerLink="/clientes" [class.active]="isActive('/clientes')">
-      <img src="assets/images/UsuarioD.png" alt="" /><span>clientes</span>
+    <a routerLink="/reportes" class="sidebar-link" [class.active]="isActive('/reportes')" (click)="closeMobile()">
+      <img src="assets/images/GraficoB.png" alt="" /><span>Reportes y Analítica</span>
+    </a>
+
+    <span class="sidebar-section-label">Sistema</span>
+    <a routerLink="/sustentabilidad" class="sidebar-link" [class.active]="isActive('/sustentabilidad')" (click)="closeMobile()">
+      <img src="assets/images/SosteB.png" alt="" /><span>Sustentabilidad</span>
     </a>
   </div>
 
-  <div class="nav-right">
-    <button class="nav-logout-btn" (click)="onLogout()" title="Cerrar sesión">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-        stroke-linecap="round" stroke-linejoin="round">
-        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-        <polyline points="16 17 21 12 16 7" />
-        <line x1="21" y1="12" x2="9" y2="12" />
-      </svg>
-      <span>Salir</span>
-    </button>
-  </div>
+  <button class="sidebar-logout" (click)="onLogout()" title="Cerrar sesión">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+      stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+    <span>Salir</span>
+  </button>
 </nav>

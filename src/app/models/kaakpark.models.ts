@@ -1,3 +1,5 @@
+export type Genero = 'M' | 'F' | 'O' | 'N';
+
 export interface Usuario {
   id?: string;
   nombre: string;
@@ -5,11 +7,24 @@ export interface Usuario {
   email?: string;
   contrasena?: string;
   puesto: string;
-  genero: 'M' | 'F';
+  genero: Genero;
   fechaIngreso: string;
   activo: boolean;
   eliminado?: boolean;
   foto?: string;
+}
+
+export interface Cliente {
+  id?: string;
+  authUid: string;
+  email: string;
+  estado: 'ACTIVO' | 'INACTIVO';
+  fechaRegistro: number;
+  nombre: string;
+  rol: 'CLIENTE';
+  telefono: string;
+  genero: Genero;
+  eliminado?: boolean;
 }
 
 export interface Cajon {
@@ -28,7 +43,11 @@ export interface ActividadReciente {
   tipo: 'entrada' | 'salida' | 'pago';
   descripcion: string;
   hora: string;
+  fecha: string;
+  timestamp: number;
   placa?: string;
+  /** Solo presente en eventos de tipo 'salida': duración real de la estancia que terminó. */
+  duracionMin?: number;
 }
 
 export interface SustentabilidadData {
@@ -37,8 +56,25 @@ export interface SustentabilidadData {
   aguaUsadaRiego: number;
   porcentajeSolar: number;
   nivelTanque: number;
+  capacidadCisternaLitros?: number;
   bombaAgua: boolean;
   alertas: string[];
+}
+
+export interface Pago {
+  id?: string;
+  folio: string;
+  cajonId: string;
+  cajonDescripcion: string;
+  placa: string;
+  horaEntrada: string;
+  horaSalida: string;
+  duracionMin: number;
+  monto: number;
+  metodo: 'Efectivo' | 'Transferencia' | 'Tarjeta';
+  estado: 'Completado' | 'Pendiente';
+  fecha: string;
+  timestamp: number;
 }
 
 export interface ReporteHistorial {
@@ -46,4 +82,21 @@ export interface ReporteHistorial {
   nombre: string;
   fecha: string;
   tipo: string;
+  periodo?: string;
+  resumen?: { label: string; valor: string }[];
+}
+
+export interface ConfigTarifa {
+  tarifaPorHora: number;
+  actualizadoEn: number;
+  actualizadoPor?: string;
+}
+
+export interface HistorialTarifa {
+  id?: string;
+  tarifaAnterior: number;
+  tarifaNueva: number;
+  fecha: string;
+  timestamp: number;
+  actualizadoPor?: string;
 }

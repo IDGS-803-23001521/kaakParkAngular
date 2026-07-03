@@ -30,11 +30,13 @@
             <option *ngFor="let p of puestos" [value]="p">{{ p }}</option>
           </select>
         </div>
-        <div class="form-group">
+        <div class="form-group form-group-wide">
           <label>Sexo</label>
           <div class="radio-row">
             <label><input type="radio" name="sexo" value="M" [(ngModel)]="fSexo" /> Masculino</label>
             <label><input type="radio" name="sexo" value="F" [(ngModel)]="fSexo" /> Femenino</label>
+            <label><input type="radio" name="sexo" value="O" [(ngModel)]="fSexo" /> Otro</label>
+            <label><input type="radio" name="sexo" value="N" [(ngModel)]="fSexo" /> Prefiero no decir</label>
           </div>
         </div>
         <div class="form-group">
@@ -71,8 +73,8 @@
     </div>
 
     <!-- TABLAS ABAJO -->
-    <div class="card-kaak usuarios-table-card">
-      <div class="tabs-row">
+    <div class="card-kaak usuarios-table-card card-scroll">
+      <div class="tabs-row" style="flex-shrink:0;">
         <button class="tab-btn" [class.active]="tabActual==='activos'" (click)="cambiarTab('activos')">
           Activos <span class="tab-count" [class.tab-count-gold]="tabActual==='activos'">{{ activos.length }}</span>
         </button>
@@ -82,7 +84,7 @@
       </div>
 
       <!-- FILTROS -->
-      <div class="filtros-row">
+      <div class="filtros-row" style="flex-shrink:0;">
         <input type="text" class="filtro-input" placeholder="Buscar por nombre..." [(ngModel)]="filtroNombre"
           (input)="onFiltroChange()" />
         <select class="filtro-select" [(ngModel)]="filtroPuesto" (change)="onFiltroChange()">
@@ -93,6 +95,7 @@
           Limpiar</button>
       </div>
 
+      <div class="card-scroll-body">
       <!-- Activos -->
       <ng-container *ngIf="tabActual==='activos'">
         <div class="table-head-row table-cols-activos">
@@ -143,9 +146,10 @@
         </div>
         <div *ngIf="listaPaginada.length===0" class="empty-msg">Sin usuarios que coincidan con la búsqueda</div>
       </ng-container>
+      </div>
 
       <!-- PAGINACIÓN -->
-      <div class="paginacion-row" *ngIf="listaFiltrada.length > usuariosPorPagina">
+      <div class="paginacion-row" *ngIf="listaFiltrada.length > usuariosPorPagina" style="flex-shrink:0;">
         <button class="btn-pagina" [disabled]="paginaActual===1" (click)="paginaAnterior()">‹ Anterior</button>
         <span class="pagina-info">Página {{ paginaActual }} de {{ totalPaginas }} · {{ listaFiltrada.length }}
           usuarios</span>
@@ -160,7 +164,7 @@
 <!-- MODAL CREDENCIALES -->
 <div *ngIf="mostrarModal" class="modal-overlay">
   <div class="modal-card">
-    <div style="font-size:1.8rem;margin-bottom:0.5rem;">🔑</div>
+    <div class="modal-icon">🔑</div>
     <h5>Credenciales generadas</h5>
     <p class="modal-sub">Guarda esta información; la contraseña no se volverá a mostrar.</p>
     <div class="modal-creds">

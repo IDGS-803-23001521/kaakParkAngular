@@ -1,16 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FirebaseService } from '../../services/firebase.service';
+import { Cliente, Genero } from '../../models/kaakpark.models';
 import { Subscription } from 'rxjs';
-
-interface Cliente {
-  id?: string;
-  nombre: string;
-  usuario: string;
-  genero: 'M' | 'F';
-  fechaIngreso: string;
-  activo: boolean;
-  eliminado: boolean;
-}
 
 interface Vehiculo {
   id?: string;
@@ -28,13 +19,17 @@ export class ClientesComponent implements OnInit, OnDestroy {
   todosLosVehiculos: Vehiculo[] = [];
   vehiculosFiltrados: Vehiculo[] = [];
 
-  fNombre = ''; fApPat = ''; fApMat = ''; fSexo: 'M' | 'F' = 'M'; fFecha = '';
+  fNombre = ''; fApPat = ''; fApMat = ''; fEmail = ''; fTelefono = ''; fSexo: Genero = 'M';
 
   editando: Cliente | null = null;
   mostrarConfirmEliminar = false;
   clienteAEliminar: Cliente | null = null;
   mostrarModalVehiculos = false;
   clienteSeleccionado: Cliente | null = null;
+
+  mostrarModalCreds = false;
+  credEmail = ''; credPass = ''; credNota = '';
+  guardando = false;
 
   filtroNombre = '';
   paginaActual = 1;
@@ -45,7 +40,7 @@ export class ClientesComponent implements OnInit, OnDestroy {
   constructor(private fb: FirebaseService) { }
 
   tabActual: 'activos' | 'inactivos' = 'activos';
-  errores = { nombre: false, apPat: false };
+  errores = { nombre: false, apPat: false, email: false, telefono: false };
   errorMensaje = '';
 
   clearError(campo: keyof typeof this.errores) {
@@ -59,10 +54,10 @@ export class ClientesComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    const subClientes = this.fb.getClientes().subscribe((clients: any[]) => {
+    const subClientes = this.fb.getClientes().subscribe((clients: Cliente[]) => {
       const vivos = clients.filter(c => !c.eliminado);
-      this.activos = vivos.filter(c => c.activo);
-      this.inactivos = vivos.filter(c => !c.activo);
+      this.activos = vivos.filter(c => c.estado === 'ACTIVO');
+      this.inactivos = vivos.filter(c => c.estado !== 'ACTIVO');
     });
     this.subs.push(subClientes);
 
@@ -72,8 +67,8 @@ export class ClientesComponent implements OnInit, OnDestroy {
     this.subs.push(subVehiculos);
   }
 
-  ngOnDestroy(): void { 
-    this.subs.forEach(s => s.unsubscribe()); 
+  ngOnDestroy(): void {
+    this.subs.forEach(s => s.unsubscribe());
   }
 
   cambiarTab(tab: 'activos' | 'inactivos'): void {
@@ -81,8 +76,8 @@ export class ClientesComponent implements OnInit, OnDestroy {
     this.paginaActual = 1;
   }
 
-  onFiltroChange(): void { 
-    this.paginaActual = 1; 
+  onFiltroChange(): void {
+    this.paginaActual = 1;
   }
 
   limpiarFiltros(): void {
@@ -111,22 +106,24 @@ export class ClientesComponent implements OnInit, OnDestroy {
     return this.listaFiltrada.slice(inicio, inicio + this.clientesPorPagina);
   }
 
-  paginaAnterior(): void { 
-    if (this.paginaActual > 1) this.paginaActual--; 
+  paginaAnterior(): void {
+    if (this.paginaActual > 1) this.paginaActual--;
   }
-  
-  paginaSiguiente(): void { 
-    if (this.paginaActual < this.totalPaginas) this.paginaActual++; 
+
+  paginaSiguiente(): void {
+    if (this.paginaActual < this.totalPaginas) this.paginaActual++;
   }
 
   async guardarCliente(): Promise<void> {
-    this.errores = { nombre: false, apPat: false };
+    this.errores = { nombre: false, apPat: false, email: false, telefono: false };
     this.errorMensaje = '';
     let invalid = false;
     if (!this.fNombre.trim()) { this.errores.nombre = true; invalid = true; }
     if (!this.fApPat.trim()) { this.errores.apPat = true; invalid = true; }
+    if (!this.editando && !this.fEmail.trim()) { this.errores.email = true; invalid = true; }
+    if (!this.fTelefono.trim()) { this.errores.telefono = true; invalid = true; }
     if (invalid) {
-      this.errorMensaje = 'Completa los campos obligatorios: Nombre y Apellido paterno.';
+      this.errorMensaje = 'Completa los campos obligatorios: Nombre, Apellido paterno, Email y Teléfono.';
       return;
     }
 
@@ -135,25 +132,50 @@ export class ClientesComponent implements OnInit, OnDestroy {
     if (this.editando) {
       const cambios: Partial<Cliente> = {
         nombre,
-        genero: this.fSexo,
-        fechaIngreso: this.fFecha || this.editando.fechaIngreso
+        telefono: this.fTelefono,
+        genero: this.fSexo
       };
       if (this.editando.id) await this.fb.updateCliente(this.editando.id, cambios);
       this.cancelarEdicion();
       return;
     }
 
-    const usuario = (this.fNombre[0] + this.fApPat).toLowerCase().replace(/[^a-z]/g, '') + Math.floor(Math.random() * 900 + 100);
-    const nuevo: Cliente = {
-      nombre, usuario,
-      genero: this.fSexo,
-      fechaIngreso: this.fFecha || new Date().toISOString().split('T')[0],
-      activo: true,
-      eliminado: false
-    };
-    await this.fb.addCliente(nuevo);
-    this.limpiarForm();
+    this.guardando = true;
+    try {
+      const pass = this.generarPassword();
+      const authUid = await this.fb.crearAuthUsuarioConUid(this.fEmail.trim(), pass);
+
+      const nuevo: Cliente = {
+        authUid,
+        email: this.fEmail.trim(),
+        estado: 'ACTIVO',
+        fechaRegistro: Date.now(),
+        nombre,
+        rol: 'CLIENTE',
+        telefono: this.fTelefono,
+        genero: this.fSexo,
+        eliminado: false
+      };
+      await this.fb.addCliente(nuevo);
+
+      this.credEmail = this.fEmail.trim();
+      this.credPass = pass;
+      this.credNota = 'Comparte estas credenciales con el cliente; la contraseña no se volverá a mostrar.';
+      this.mostrarModalCreds = true;
+
+      this.limpiarForm();
+    } catch (e: any) {
+      if (e.code === 'auth/email-already-in-use') {
+        this.errorMensaje = 'Ya existe una cuenta con este correo electrónico.';
+      } else {
+        this.errorMensaje = 'Error al crear el cliente: ' + (e.message || e);
+      }
+    } finally {
+      this.guardando = false;
+    }
   }
+
+  cerrarModalCreds(): void { this.mostrarModalCreds = false; }
 
   editarCliente(c: Cliente): void {
     this.editando = c;
@@ -161,9 +183,10 @@ export class ClientesComponent implements OnInit, OnDestroy {
     this.fNombre = partes[0] || '';
     this.fApPat = partes[1] || '';
     this.fApMat = partes.slice(2).join(' ');
+    this.fEmail = c.email;
+    this.fTelefono = c.telefono || '';
     this.fSexo = c.genero;
-    this.fFecha = c.fechaIngreso || '';
-    this.errores = { nombre: false, apPat: false };
+    this.errores = { nombre: false, apPat: false, email: false, telefono: false };
     this.errorMensaje = '';
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -212,8 +235,16 @@ export class ClientesComponent implements OnInit, OnDestroy {
   }
 
   limpiarForm(): void {
-    this.fNombre = ''; this.fApPat = ''; this.fApMat = ''; this.fSexo = 'M'; this.fFecha = '';
-    this.errores = { nombre: false, apPat: false };
+    this.fNombre = ''; this.fApPat = ''; this.fApMat = ''; this.fEmail = ''; this.fTelefono = ''; this.fSexo = 'M';
+    this.errores = { nombre: false, apPat: false, email: false, telefono: false };
     this.errorMensaje = '';
+  }
+
+  private generarPassword(): string {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    const esp = ['!', '%', '*', '-', '+', '?'];
+    let pass = '';
+    for (let i = 0; i < 7; i++) pass += chars[Math.floor(Math.random() * chars.length)];
+    return pass + esp[Math.floor(Math.random() * esp.length)];
   }
 }

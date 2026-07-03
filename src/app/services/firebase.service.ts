@@ -5,11 +5,11 @@ import {
   collection, doc,
   addDoc, updateDoc, setDoc, getDocs, getDoc,
   onSnapshot,
-  query, orderBy, limit
+  query, orderBy, limit, where
 } from 'firebase/firestore';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { Observable } from 'rxjs';
-import { Cajon, Usuario, ActividadReciente, SustentabilidadData, ReporteHistorial } from '../models/kaakpark.models';
+import { Cajon, Usuario, Cliente, ActividadReciente, Pago, SustentabilidadData, ReporteHistorial, ConfigTarifa, HistorialTarifa } from '../models/kaakpark.models';
 import { environment } from '../../environments/environment';
 import { Secuencia } from '../services/mqtt-robot.service';
 
@@ -109,23 +109,35 @@ updateSecuencia(id: string, cambios: Partial<Secuencia>): Promise<void> {
     }
   }
 
-    // ─── ACTIVIDAD CLIENTES ────────────────────────────
-
-
-  getClientes(): Observable<any[]> {
-    return this.snapCollection<any>(collection(this.db, 'clientes'));
+  /** Igual que crearAuthUsuario pero devuelve el UID generado (necesario para ligar el doc de Firestore). */
+  async crearAuthUsuarioConUid(email: string, password: string): Promise<string> {
+    const tempApp = initializeApp(environment.firebase, `auth-temp-${Date.now()}`);
+    try {
+      const tempAuth = getAuth(tempApp);
+      const cred = await createUserWithEmailAndPassword(tempAuth, email, password);
+      return cred.user.uid;
+    } finally {
+      await deleteApp(tempApp);
+    }
   }
 
-  async addCliente(cliente: any): Promise<void> {
-    await addDoc(collection(this.db, 'clientes'), cliente as any);
+    // ─── CLIENTES ──────────────────────────────────────
+    private readonly CLIENTES_COL = 'usuariosc';
+
+  getClientes(): Observable<Cliente[]> {
+    return this.snapCollection<Cliente>(collection(this.db, this.CLIENTES_COL));
   }
 
-  updateCliente(id: string, data: Partial<any>): Promise<void> {
-    return updateDoc(doc(this.db, `clientes/${id}`), data as any);
+  async addCliente(cliente: Cliente): Promise<void> {
+    await addDoc(collection(this.db, this.CLIENTES_COL), cliente as any);
+  }
+
+  updateCliente(id: string, data: Partial<Cliente>): Promise<void> {
+    return updateDoc(doc(this.db, `${this.CLIENTES_COL}/${id}`), data as any);
   }
 
   toggleClienteActivo(id: string, activo: boolean): Promise<void> {
-    return this.updateCliente(id, { activo });
+    return this.updateCliente(id, { estado: activo ? 'ACTIVO' : 'INACTIVO' });
   }
 
   // ─── Auto ────────────────────────────
@@ -136,12 +148,29 @@ updateSecuencia(id: string, cambios: Partial<Secuencia>): Promise<void> {
 
   // ─── ACTIVIDAD RECIENTE ────────────────────────────
   getActividadReciente(): Observable<ActividadReciente[]> {
-    const q = query(collection(this.db, 'actividad'), orderBy('hora', 'desc'), limit(5));
+    const q = query(collection(this.db, 'actividad'), orderBy('timestamp', 'desc'), limit(5));
+    return this.snapCollection<ActividadReciente>(q);
+  }
+
+  /** Actividad del día (fecha = 'YYYY-MM-DD'), sin límite — para conteos y gráficas reales. */
+  getActividadPorFecha(fecha: string): Observable<ActividadReciente[]> {
+    const q = query(collection(this.db, 'actividad'), where('fecha', '==', fecha));
     return this.snapCollection<ActividadReciente>(q);
   }
 
   async addActividad(actividad: ActividadReciente): Promise<void> {
     await addDoc(collection(this.db, 'actividad'), actividad as any);
+  }
+
+  /** Actividad entre dos timestamps (ms), ordenada — para gráficas y reportes históricos. */
+  getActividadRango(inicio: number, fin: number): Observable<ActividadReciente[]> {
+    const q = query(
+      collection(this.db, 'actividad'),
+      where('timestamp', '>=', inicio),
+      where('timestamp', '<=', fin),
+      orderBy('timestamp', 'asc')
+    );
+    return this.snapCollection<ActividadReciente>(q);
   }
 
   // ─── SUSTENTABILIDAD ──────────────────────────────
@@ -159,9 +188,47 @@ updateSecuencia(id: string, cambios: Partial<Secuencia>): Promise<void> {
     if (snap.exists()) return;
     const defaults: SustentabilidadData = {
       energiaGeneradaKwh: 0, aguaCaptadaLitros: 0, aguaUsadaRiego: 0,
-      porcentajeSolar: 0, nivelTanque: 0, bombaAgua: false, alertas: []
+      porcentajeSolar: 0, nivelTanque: 0, capacidadCisternaLitros: 4,
+      bombaAgua: false, alertas: []
     };
     await setDoc(ref, defaults);
+  }
+
+  // ─── PAGOS ─────────────────────────────────────────
+  getPagos(): Observable<Pago[]> {
+    const q = query(collection(this.db, 'pagos'), orderBy('timestamp', 'desc'));
+    return this.snapCollection<Pago>(q);
+  }
+
+  async addPago(pago: Pago): Promise<any> {
+    return addDoc(collection(this.db, 'pagos'), pago as any);
+  }
+
+  // ─── TARIFA ────────────────────────────────────────
+  getTarifa(): Observable<ConfigTarifa> {
+    return this.snapDoc<ConfigTarifa>(doc(this.db, 'configuracion/tarifas'));
+  }
+
+  async updateTarifa(nueva: number, anterior: number, actualizadoPor?: string): Promise<void> {
+    const ahora = Date.now();
+    const fecha = new Date().toISOString().slice(0, 10);
+    await setDoc(doc(this.db, 'configuracion/tarifas'), {
+      tarifaPorHora: nueva,
+      actualizadoEn: ahora,
+      actualizadoPor: actualizadoPor ?? ''
+    } as ConfigTarifa);
+    await addDoc(collection(this.db, 'historial-tarifas'), {
+      tarifaAnterior: anterior,
+      tarifaNueva: nueva,
+      fecha,
+      timestamp: ahora,
+      actualizadoPor: actualizadoPor ?? ''
+    } as HistorialTarifa);
+  }
+
+  getHistorialTarifas(): Observable<HistorialTarifa[]> {
+    const q = query(collection(this.db, 'historial-tarifas'), orderBy('timestamp', 'desc'));
+    return this.snapCollection<HistorialTarifa>(q);
   }
 
   // ─── REPORTES ──────────────────────────────────────

@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FirebaseService } from '../../services/firebase.service';
-import { Usuario } from '../../models/kaakpark.models';
+import { Usuario, Genero } from '../../models/kaakpark.models';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -10,7 +10,7 @@ export class UsuariosComponent implements OnInit, OnDestroy {
   activos: Usuario[] = [];
   inactivos: Usuario[] = [];
 
-  fNombre = ''; fApPat = ''; fApMat = ''; fPuesto = ''; fSexo: 'M' | 'F' = 'M'; fFecha = '';
+  fNombre = ''; fApPat = ''; fApMat = ''; fPuesto = ''; fSexo: Genero = 'M'; fFecha = '';
   fotoPreview = 'assets/images/UsuarioD.png';
   fotoBase64: string | null = null;
 

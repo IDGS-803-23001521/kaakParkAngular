@@ -23,8 +23,9 @@
       <!-- Panel izquierdo: control manual + constructor -->
       <div class="motor-panel-left">
 
-        <div class="card-kaak">
-          <h5>Control manual</h5>
+        <div class="card-kaak card-scroll" style="flex:1;">
+          <h5 style="flex-shrink:0;">Control manual</h5>
+          <div class="card-scroll-body">
           <div class="motor-grid">
 
             <div class="motor-card">
@@ -69,15 +70,16 @@
             </div>
 
           </div>
-          <button class="btn-eliminar-confirm motor-stop-all" (click)="pararTodo()">PARAR TODO</button>
-        </div><br>
+          </div>
+          <button class="btn-eliminar-confirm motor-stop-all" style="flex-shrink:0;" (click)="pararTodo()">PARAR TODO</button>
+        </div>
 
-        <div class="card-kaak">
+        <div class="card-kaak card-scroll">
           <h5>Constructor de secuencias</h5>
-          <div class="motor-hint">Configura un motor arriba y dale "+" para agregarlo aquí, en el orden que quieras.</div>
+          <div class="motor-hint" style="flex-shrink:0;">Configura un motor arriba y dale "+" para agregarlo aquí, en el orden que quieras.</div>
 
           <!-- Acciones especiales: no son de un motor en particular -->
-          <div class="motor-especiales-row">
+          <div class="motor-especiales-row" style="flex-shrink:0;">
             <span class="motor-especiales-label">Esperar</span>
             <input class="filtro-input" type="number" [(ngModel)]="esperarMs" />
             <span class="motor-add-unidad">ms</span>
@@ -86,6 +88,7 @@
             <button class="btn-cancelar" (click)="agregarPararDc()">+ Parar DC</button>
           </div>
 
+          <div class="card-scroll-body">
           <ng-container *ngIf="pasos.length; else sinPasos">
             <div class="motor-step-item" *ngFor="let p of pasos; let i = index">
               <span class="motor-step-num">{{ i + 1 }}</span>
@@ -99,8 +102,9 @@
           <ng-template #sinPasos>
             <div class="empty-msg">Sin pasos — agrega uno desde un motor o desde acciones especiales</div>
           </ng-template>
+          </div>
 
-          <div class="motor-seq-name-row">
+          <div class="motor-seq-name-row" style="flex-shrink:0;">
             <input class="filtro-input" [(ngModel)]="nombreSecuencia" placeholder="Nombre de la secuencia…" />
             <button class="btn-guardar" (click)="guardarSecuencia()">{{ editandoId ? 'Guardar cambios' : 'Guardar' }}</button>
             <button class="btn-cancelar" (click)="limpiarSecuencia()">{{ editandoId ? 'Cancelar edición' : 'Limpiar' }}</button>
@@ -110,8 +114,9 @@
       </div>
 
       <!-- Panel derecho: secuencias guardadas (Firebase es la fuente) -->
-      <div class="card-kaak motor-panel-right">
+      <div class="card-kaak motor-panel-right card-scroll">
         <h5>Secuencias guardadas</h5>
+        <div class="card-scroll-body">
         <div *ngIf="cargandoSecuencias" class="empty-msg">Cargando…</div>
         <div *ngIf="!cargandoSecuencias && secuenciasFirebase.length === 0" class="empty-msg">
           Sin secuencias guardadas todavía
@@ -124,6 +129,7 @@
           <button class="btn-icon" title="Ejecutar" [disabled]="ocupado" (click)="ejecutarSecuencia(s)">▶</button>
           <button class="btn-icon" title="Editar" (click)="editarSecuencia(s)">✏️</button>
           <button class="btn-icon btn-icon-eliminar" title="Eliminar" (click)="eliminarSecuencia(s)">🗑</button>
+        </div>
         </div>
       </div>
 
