@@ -812,7 +812,7 @@ body { font-family: var(--font-sans); background: var(--dark); color: #fff; min-
   animation:modal-pop .18s cubic-bezier(.2,.8,.3,1);
 }
 .pagos-ticket-header {
-  background:#1b1b1b; text-align:center; padding:1.5rem 1.25rem 1.25rem;
+  background:#ffffff; text-align:center; padding:1.5rem 1.25rem 1.25rem;
   position:relative;
 }
 .pagos-ticket-header::after {
@@ -836,6 +836,54 @@ body { font-family: var(--font-sans); background: var(--dark); color: #fff; min-
   border-top:1px solid #f0f0f0;
 }
 .pagos-ticket-acciones button { flex:1; }
+
+/* TICKET · variante para el modal de reportes */
+.reporte-ticket-card {
+  border:1px solid rgba(0,0,0,0.05);
+  display:flex; flex-direction:column; max-height:88vh;
+}
+.reporte-ticket-header {
+  background:#ffffff; text-align:center;
+  padding:1.75rem 1.5rem 1.5rem; flex-shrink:0;
+}
+.reporte-ticket-header::after { background:linear-gradient(90deg, var(--gold), var(--gold-light)); }
+.reporte-ticket-icon {
+  width:48px; height:48px; margin:0 auto 0.75rem; border-radius:50%;
+  background:rgba(201,162,39,0.12); border:1.5px solid var(--gold);
+  display:flex; align-items:center; justify-content:center; font-size:1.3rem;
+}
+.reporte-ticket-kicker {
+  font-size:0.72rem; color:var(--gold); text-transform:uppercase;
+  letter-spacing:.14em; font-weight:700; margin-bottom:6px;
+}
+.reporte-ticket-title { font-size:1.15rem; font-weight:800; color:#111; margin-bottom:4px; text-wrap:balance; }
+.reporte-ticket-fecha { font-size:0.78rem; color:#888; }
+
+.reporte-ticket-rango {
+  display:flex; justify-content:space-between; align-items:center; gap:1rem;
+  padding:0.6rem 1.5rem; background:#faf6ea; border-bottom:1px solid #f0e6c8;
+  font-size:0.76rem; color:#8a7238; flex-shrink:0;
+}
+.reporte-ticket-rango strong { color:#3d3320; font-weight:700; text-align:right; }
+
+.reporte-ticket-card .pagos-ticket-body { padding:0.5rem 1.25rem 1rem; gap:2px; }
+.reporte-ticket-scroll { overflow-y:auto; min-height:0; flex:1 1 auto; }
+.reporte-ticket-scroll::-webkit-scrollbar { width:6px; }
+.reporte-ticket-scroll::-webkit-scrollbar-thumb { background:#e8dfc0; border-radius:3px; }
+
+.reporte-ticket-seccion-titulo {
+  font-size:0.66rem; font-weight:800; color:var(--gold); text-transform:uppercase;
+  letter-spacing:.09em; margin:14px 4px 4px;
+}
+.reporte-ticket-seccion:first-child .reporte-ticket-seccion-titulo { margin-top:10px; }
+
+.reporte-ticket-fila { border-bottom:none !important; padding:9px 12px !important; border-radius:9px; }
+.reporte-ticket-fila:nth-child(odd) { background:#f7f7f5; }
+.reporte-ticket-fila span { color:#777; }
+.reporte-ticket-footer-note {
+  text-align:center; font-size:0.72rem; color:#9a8144; margin:0 1.25rem 1.25rem;
+  padding:0.65rem 0.9rem; border-radius:9px; background:#faf6ea; flex-shrink:0;
+}
 
 /* Print: muestra solo el ticket.
    app-root (no body) es el padre real de todo lo que renderiza Angular,

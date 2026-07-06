@@ -85,7 +85,7 @@ export interface ReporteHistorial {
   fecha: string;
   tipo: string;
   periodo?: string;
-  resumen?: { label: string; valor: string }[];
+  resumen?: { label: string; valor: string; seccion?: string }[];
 }
 
 export interface ConfigTarifa {

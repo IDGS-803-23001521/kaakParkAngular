@@ -397,8 +397,7 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
       };
       await this.fb.addReporte(reporte);
 
-      this.reporteVer    = reporte;
-      this.mostrarReporte = true;
+      this.abrirReporte(reporte);
     } catch (e) {
       console.error('Error al generar reporte:', e);
     } finally {
@@ -406,61 +405,88 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  private computarResumen(): { label: string; valor: string }[] {
-    const items: { label: string; valor: string }[] = [
+  private computarResumen(): { label: string; valor: string; seccion?: string }[] {
+    const items: { label: string; valor: string; seccion?: string }[] = [
       { label: 'Rango de fechas', valor: this.periodoLabel }
     ];
     const m = this.modulo;
 
     if (m === 'general' || m === 'pagos') {
       items.push(
-        { label: 'Ingresos del período',      valor: `$${this.ingresosPeriodo} MXN` },
-        { label: 'Transacciones completadas', valor: `${this.transaccionesPeriodo}` },
-        { label: 'Ticket promedio',           valor: this.transaccionesPeriodo > 0 ? `$${this.ticketPromedio} MXN` : '—' },
-        { label: 'Pagos en efectivo',         valor: `${this.pagosPeriodo.filter(p => p.metodo === 'Efectivo').length}` },
-        { label: 'Pagos por transferencia',   valor: `${this.pagosPeriodo.filter(p => p.metodo === 'Transferencia').length}` },
-        { label: 'Pagos con tarjeta',         valor: `${this.pagosPeriodo.filter(p => p.metodo === 'Tarjeta').length}` }
+        { seccion: 'Pagos', label: 'Ingresos del período',      valor: `$${this.ingresosPeriodo} MXN` },
+        { seccion: 'Pagos', label: 'Transacciones completadas', valor: `${this.transaccionesPeriodo}` },
+        { seccion: 'Pagos', label: 'Ticket promedio',           valor: this.transaccionesPeriodo > 0 ? `$${this.ticketPromedio} MXN` : '—' },
+        { seccion: 'Pagos', label: 'Pagos en efectivo',         valor: `${this.pagosPeriodo.filter(p => p.metodo === 'Efectivo').length}` },
+        { seccion: 'Pagos', label: 'Pagos por transferencia',   valor: `${this.pagosPeriodo.filter(p => p.metodo === 'Transferencia').length}` },
+        { seccion: 'Pagos', label: 'Pagos con tarjeta',         valor: `${this.pagosPeriodo.filter(p => p.metodo === 'Tarjeta').length}` }
       );
     }
 
     if (m === 'general' || m === 'cajones') {
       items.push(
-        { label: 'Entradas registradas',  valor: `${this.entradasPeriodo}` },
-        { label: 'Salidas registradas',   valor: `${this.salidasPeriodo}` },
-        { label: 'Tiempo prom. de estancia', valor: this.tiempoPromedioEstancia },
-        { label: 'Ocupación actual',      valor: `${this.ocupacionActual}%` },
-        { label: 'Cajones activos',       valor: `${this.cajones.length}` }
+        { seccion: 'Ocupación y accesos', label: 'Entradas registradas',      valor: `${this.entradasPeriodo}` },
+        { seccion: 'Ocupación y accesos', label: 'Salidas registradas',       valor: `${this.salidasPeriodo}` },
+        { seccion: 'Ocupación y accesos', label: 'Tiempo prom. de estancia',  valor: this.tiempoPromedioEstancia },
+        { seccion: 'Ocupación y accesos', label: 'Ocupación actual',         valor: `${this.ocupacionActual}%` },
+        { seccion: 'Ocupación y accesos', label: 'Cajones activos',          valor: `${this.cajones.length}` }
       );
     }
 
     if (m === 'general' || m === 'sustentabilidad') {
       const s = this.sustentabilidad;
       items.push(
-        { label: 'Energía solar generada', valor: s ? `${s.energiaGeneradaKwh} kWh` : '—' },
-        { label: 'Agua captada',           valor: s ? `${s.aguaCaptadaLitros} L` : '—' },
-        { label: 'Porcentaje solar',       valor: s ? `${s.porcentajeSolar}%` : '—' },
-        { label: 'Nivel del tanque',       valor: s ? `${s.nivelTanque}%` : '—' }
+        { seccion: 'Sustentabilidad', label: 'Energía solar generada', valor: s ? `${s.energiaGeneradaKwh} kWh` : '—' },
+        { seccion: 'Sustentabilidad', label: 'Agua captada',           valor: s ? `${s.aguaCaptadaLitros} L` : '—' },
+        { seccion: 'Sustentabilidad', label: 'Porcentaje solar',       valor: s ? `${s.porcentajeSolar}%` : '—' },
+        { seccion: 'Sustentabilidad', label: 'Nivel del tanque',       valor: s ? `${s.nivelTanque}%` : '—' }
       );
     }
 
     if (m === 'general' || m === 'control-motores') {
       items.push(
-        { label: 'Secuencias configuradas', valor: `${this.secuencias.length}` }
+        { seccion: 'Control de motores', label: 'Secuencias configuradas', valor: `${this.secuencias.length}` }
       );
     }
 
     return items;
   }
 
+  // ── Vista agrupada del resumen para el modal (calculada una sola vez al
+  //    abrir, nunca como getter: un getter que arma arreglos/objetos nuevos
+  //    en cada evaluación hace que el *ngFor los vea "distintos" en cada
+  //    ciclo de detección de cambios y los destruya/recree sin parar) ──────
+  resumenRango: { label: string; valor: string } | null = null;
+  resumenSecciones: { nombre: string; items: { label: string; valor: string }[] }[] = [];
+
+  private abrirReporte(r: ReporteHistorial): void {
+    this.reporteVer     = r;
+    this.mostrarReporte = true;
+
+    const resumen = r.resumen ?? [];
+    const primero = resumen[0];
+    this.resumenRango = primero && primero.label === 'Rango de fechas' ? primero : null;
+
+    const items = this.resumenRango ? resumen.slice(1) : resumen;
+    const grupos: { nombre: string; items: { label: string; valor: string }[] }[] = [];
+    for (const item of items) {
+      const nombre = item.seccion ?? 'Resumen';
+      let grupo = grupos.find(g => g.nombre === nombre);
+      if (!grupo) { grupo = { nombre, items: [] }; grupos.push(grupo); }
+      grupo.items.push(item);
+    }
+    this.resumenSecciones = grupos;
+  }
+
   // ── Ver / imprimir reportes del historial ────────────────────────────────
   verReporte(r: ReporteHistorial): void {
-    this.reporteVer    = r;
-    this.mostrarReporte = true;
+    this.abrirReporte(r);
   }
 
   cerrarReporte(): void {
     this.mostrarReporte = false;
     this.reporteVer    = null;
+    this.resumenRango   = null;
+    this.resumenSecciones = [];
   }
 
   imprimirReporte(): void { window.print(); }

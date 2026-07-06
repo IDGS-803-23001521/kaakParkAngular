@@ -106,19 +106,28 @@
 
 <!-- ── MODAL: VISTA / IMPRESIÓN DE REPORTE ──────────────────────────────────── -->
 <div *ngIf="mostrarReporte && reporteVer" class="modal-overlay">
-  <div class="pagos-ticket-card" style="max-width:420px;">
+  <div class="pagos-ticket-card reporte-ticket-card" style="max-width:420px;">
 
-    <div class="pagos-ticket-header">
-      <div style="font-size:0.75rem;color:#888;text-transform:uppercase;letter-spacing:.1em;">K'áaxPark</div>
-      <div style="font-size:1.15rem;font-weight:800;color:#111;margin:4px 0;">{{ reporteVer.nombre }}</div>
-      <div style="font-size:0.78rem;color:#888;">{{ reporteVer.fecha }}</div>
+    <div class="pagos-ticket-header reporte-ticket-header">
+      <div class="reporte-ticket-icon">📄</div>
+      <div class="reporte-ticket-kicker">K'áaxPark</div>
+      <div class="reporte-ticket-title">{{ reporteVer.nombre }}</div>
+      <div class="reporte-ticket-fecha">{{ reporteVer.fecha }}</div>
     </div>
 
-    <div class="pagos-ticket-body">
-      <ng-container *ngIf="reporteVer.resumen?.length; else sinResumen">
-        <div class="pagos-ticket-fila" *ngFor="let item of reporteVer.resumen">
-          <span>{{ item.label }}</span>
-          <strong>{{ item.valor }}</strong>
+    <div class="reporte-ticket-rango" *ngIf="resumenRango">
+      <span>Periodo analizado</span>
+      <strong>{{ resumenRango.valor }}</strong>
+    </div>
+
+    <div class="pagos-ticket-body reporte-ticket-scroll">
+      <ng-container *ngIf="resumenSecciones.length; else sinResumen">
+        <div class="reporte-ticket-seccion" *ngFor="let grupo of resumenSecciones">
+          <div class="reporte-ticket-seccion-titulo" *ngIf="resumenSecciones.length > 1">{{ grupo.nombre }}</div>
+          <div class="pagos-ticket-fila reporte-ticket-fila" *ngFor="let item of grupo.items">
+            <span>{{ item.label }}</span>
+            <strong>{{ item.valor }}</strong>
+          </div>
         </div>
       </ng-container>
       <ng-template #sinResumen>
@@ -128,7 +137,7 @@
       </ng-template>
     </div>
 
-    <div style="text-align:center;font-size:0.7rem;color:#aaa;margin-top:0.75rem;padding-top:0.75rem;border-top:1px dashed #e5e5e5;">
+    <div class="reporte-ticket-footer-note">
       Generado por K'áaxPark · Sistema de gestión de estacionamiento
     </div>
 
