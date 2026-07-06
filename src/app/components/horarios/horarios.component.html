@@ -19,8 +19,10 @@
         </div>
       </div>
       <div class="form-btns" style="margin-top:1.25rem;flex-shrink:0;">
-        <button class="btn-cancelar">Cancelar</button>
-        <button class="btn-guardar">Guardar horario</button>
+        <button class="btn-cancelar" [disabled]="!hayCambiosHorario || guardandoHorario" (click)="cancelarHorario()">Cancelar</button>
+        <button class="btn-guardar" [disabled]="!hayCambiosHorario || guardandoHorario" (click)="guardarHorario()">
+          {{ guardandoHorario ? 'Guardando…' : 'Guardar horario' }}
+        </button>
       </div>
     </div>
 
@@ -77,10 +79,14 @@
           <input type="time" [(ngModel)]="nuevaApertura"/>
           <span class="horarios-guion">–</span>
           <input type="time" [(ngModel)]="nuevaCierre"/>
-          <button class="btn-guardar" (click)="agregarEspecial()">+</button>
+          <button class="btn-guardar" [disabled]="guardandoEspecial" (click)="agregarEspecial()">+</button>
         </div>
       </div>
     </div>
 
   </div>
+</div>
+
+<div class="motor-toast" [class.show]="toastVisible" [class.ok]="toastTipo==='ok'" [class.err]="toastTipo==='err'" [class.info]="toastTipo==='info'">
+  {{ toastMsg }}
 </div>

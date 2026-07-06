@@ -3,14 +3,14 @@ import { getApp, initializeApp, deleteApp } from 'firebase/app';
 import {
   getFirestore, Firestore,
   collection, doc,
-  addDoc, updateDoc, setDoc, getDocs, getDoc,
+  addDoc, updateDoc, setDoc, getDocs, getDoc, deleteDoc,
   onSnapshot,
   query, orderBy, limit, where,
   writeBatch, Timestamp
 } from 'firebase/firestore';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { Observable } from 'rxjs';
-import { Cajon, Usuario, Cliente, ActividadReciente, Pago, SustentabilidadData, ReporteHistorial, ConfigTarifa, HistorialTarifa } from '../models/kaakpark.models';
+import { Cajon, Usuario, Cliente, ActividadReciente, Pago, SustentabilidadData, ReporteHistorial, ConfigTarifa, HistorialTarifa, HorarioSemanal, HorarioDia, DiaEspecial } from '../models/kaakpark.models';
 import { environment } from '../../environments/environment';
 import { Secuencia, PasoSecuencia } from '../services/mqtt-robot.service';
 
@@ -266,5 +266,48 @@ async fetchPasosSecuencia(secuenciaId: string): Promise<PasoSecuencia[]> {
   async addReporte(reporte: ReporteHistorial): Promise<void> {
     await addDoc(collection(this.db, 'reportes'), reporte as any);
   }
-  
+
+  // ─── HORARIOS ──────────────────────────────────────
+  private readonly HORARIO_DOC = 'configuracion/horario';
+  private readonly DIAS_ESPECIALES_COL = 'dias-especiales';
+
+  getHorario(): Observable<HorarioSemanal> {
+    return this.snapDoc<HorarioSemanal>(doc(this.db, this.HORARIO_DOC));
+  }
+
+  async seedHorarioIfEmpty(): Promise<void> {
+    const ref = doc(this.db, this.HORARIO_DOC);
+    const snap = await getDoc(ref);
+    if (snap.exists()) return;
+    const defaults: HorarioSemanal = {
+      dias: [
+        { nombre: 'Lunes',     apertura: '08:00', cierre: '20:00', abierto: true },
+        { nombre: 'Martes',    apertura: '08:00', cierre: '20:00', abierto: true },
+        { nombre: 'Miércoles', apertura: '08:00', cierre: '20:00', abierto: true },
+        { nombre: 'Jueves',    apertura: '08:00', cierre: '20:00', abierto: true },
+        { nombre: 'Viernes',   apertura: '08:00', cierre: '22:00', abierto: true },
+        { nombre: 'Sábado',    apertura: '09:00', cierre: '22:00', abierto: true },
+        { nombre: 'Domingo',   apertura: '09:00', cierre: '18:00', abierto: true }
+      ]
+    };
+    await setDoc(ref, defaults);
+  }
+
+  updateHorario(dias: HorarioDia[]): Promise<void> {
+    return setDoc(doc(this.db, this.HORARIO_DOC), { dias } as HorarioSemanal);
+  }
+
+  getDiasEspeciales(): Observable<DiaEspecial[]> {
+    const q = query(collection(this.db, this.DIAS_ESPECIALES_COL), orderBy('fecha', 'asc'));
+    return this.snapCollection<DiaEspecial>(q);
+  }
+
+  async addDiaEspecial(dia: Omit<DiaEspecial, 'id'>): Promise<void> {
+    await addDoc(collection(this.db, this.DIAS_ESPECIALES_COL), dia as any);
+  }
+
+  async eliminarDiaEspecial(id: string): Promise<void> {
+    await deleteDoc(doc(this.db, `${this.DIAS_ESPECIALES_COL}/${id}`));
+  }
+
 }

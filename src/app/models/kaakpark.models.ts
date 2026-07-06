@@ -102,3 +102,22 @@ export interface HistorialTarifa {
   timestamp: number;
   actualizadoPor?: string;
 }
+
+export interface HorarioDia {
+  nombre: string;
+  apertura: string;
+  cierre: string;
+  abierto: boolean;
+}
+
+export interface HorarioSemanal {
+  dias: HorarioDia[];
+}
+
+export interface DiaEspecial {
+  id?: string;
+  etiqueta: string;
+  fecha: string;
+  apertura: string;
+  cierre: string;
+}
