@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FirebaseService } from '../../services/firebase.service';
+import { MqttRobotService } from '../../services/mqtt-robot.service';
 import { ActividadReciente, Cajon, HistorialTarifa, Pago } from '../../models/kaakpark.models';
 import { Subscription } from 'rxjs';
 
@@ -33,11 +34,13 @@ export class PagosComponent implements OnInit, OnDestroy {
   metodoPago: 'Efectivo' | 'Transferencia' | 'Tarjeta' = 'Efectivo';
   procesando = false;
 
+  // ── Confirmación de pagos en caja (desde app móvil) ───────────────────────
+  confirmando = false;
+
   // ── Ticket ───────────────────────────────────────────────────────────────
   mostrarTicket = false;
   ticketPago: Pago | null = null;
 
-  // ── Datos bancarios (reemplaza con los reales) ────────────────────────────
   readonly DATOS_TRANSFERENCIA = {
     banco:   'BBVA',
     titular: "K'áaxPark S.A. de C.V.",
@@ -82,6 +85,13 @@ export class PagosComponent implements OnInit, OnDestroy {
     return Math.ceil(Math.max(1, Math.ceil(mins / 60))) * this.tarifaPorHora;
   }
 
+  // ── Getter: pagos en espera de cobro en caja (iniciados desde la app) ─────
+  get pagosPendientesCaja(): Pago[] {
+    return this.pagos
+      .filter(p => p.estado === 'PendienteCaja')
+      .sort((a, b) => a.timestamp - b.timestamp);
+  }
+
   // ── Getters: estadísticas ────────────────────────────────────────────────
   get totalHoy(): number {
     const hoy = new Date().toISOString().slice(0, 10);
@@ -92,7 +102,7 @@ export class PagosComponent implements OnInit, OnDestroy {
 
   get pagosHoy(): number {
     const hoy = new Date().toISOString().slice(0, 10);
-    return this.pagos.filter(p => p.fecha === hoy).length;
+    return this.pagos.filter(p => p.fecha === hoy && p.estado === 'Completado').length;
   }
 
   get promedioVisita(): number {
@@ -103,7 +113,8 @@ export class PagosComponent implements OnInit, OnDestroy {
 
   // ── Getters: historial filtrado ──────────────────────────────────────────
   get pagosFiltrados(): Pago[] {
-    let lista = [...this.pagos];
+    // Solo pagos completados en el historial, no los pendientes de caja
+    let lista = this.pagos.filter(p => p.estado !== 'PendienteCaja');
     const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
 
     if (this.rangoSeleccionado === 'Últimos 7 días') {
@@ -150,7 +161,7 @@ export class PagosComponent implements OnInit, OnDestroy {
   }
 
   // ── Lifecycle ────────────────────────────────────────────────────────────
-  constructor(private fb: FirebaseService) {}
+  constructor(private fb: FirebaseService, private robot: MqttRobotService) {}
 
   ngOnInit(): void {
     this.subs.push(
@@ -173,6 +184,63 @@ export class PagosComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.subs.forEach(s => s.unsubscribe());
     if (this.tickInterval) clearInterval(this.tickInterval);
+  }
+
+  // ── Confirmar pago en caja (solicitud llegada desde la app móvil) ─────────
+  async confirmarPagoCaja(pago: Pago): Promise<void> {
+    if (!pago.id || this.confirmando) return;
+    this.confirmando = true;
+
+    try {
+      const ahora = new Date();
+      const horaSalida = ahora.toLocaleTimeString('es-MX', {
+        hour: '2-digit', minute: '2-digit', hour12: false
+      });
+      const fecha = ahora.toISOString().slice(0, 10);
+
+      // 1. Marcar el pago como Completado (la app móvil detecta este cambio
+      //    mediante su listener en tiempo real y muestra "vehículo en camino").
+      await this.fb.updatePago(pago.id, {
+        estado: 'Completado',
+        horaSalida,
+        fecha,
+        timestamp: ahora.getTime()
+      });
+
+      // 2. Finalizar la estancia (cajón a Libre, estancia a FINALIZADA).
+      if (pago.estanciaId && pago.cajonId) {
+        await this.fb.finalizarEstanciaAdmin(pago.estanciaId, pago.cajonId);
+      }
+
+      // 3. Ejecutar la secuencia de salida del motor para ese cajón.
+      const cajon = this.cajones.find(c => c.id === pago.cajonId);
+      if (cajon?.secuenciaSalidaId) {
+        const pasos = await this.fb.fetchPasosSecuencia(cajon.secuenciaSalidaId);
+        if (pasos.length > 0) {
+          this.robot.ejecutarPasos(pasos).catch(() => {
+            // Si el robot no responde, el admin lo puede activar manualmente
+            // desde la página de Control de Motores.
+          });
+        }
+      }
+
+      // 4. Registrar actividad (mismo patrón que registrarPago).
+      const actividad: any = {
+        tipo: 'salida',
+        descripcion: `${pago.cajonDescripcion} · Folio ${pago.folio}`,
+        hora: horaSalida,
+        fecha,
+        timestamp: ahora.getTime(),
+        placa: pago.placa || '',
+        duracionMin: pago.duracionMin
+      };
+      await this.fb.addActividad(actividad);
+
+    } catch (e) {
+      console.error('Error al confirmar pago en caja:', e);
+    } finally {
+      this.confirmando = false;
+    }
   }
 
   // ── Tarifa: edición ──────────────────────────────────────────────────────
@@ -268,7 +336,7 @@ export class PagosComponent implements OnInit, OnDestroy {
       await this.fb.addPago(pago);
       await this.fb.updateCajon(cj.id, { estado: 'Libre', horaEntrada: '', placa: '' });
 
-      const actividad: ActividadReciente = {
+      const actividad: any = {
         tipo:        'salida',
         descripcion: `${pago.cajonDescripcion} · Folio ${folio}`,
         hora:        horaSalida,

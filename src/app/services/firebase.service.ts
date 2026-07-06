@@ -5,13 +5,14 @@ import {
   collection, doc,
   addDoc, updateDoc, setDoc, getDocs, getDoc,
   onSnapshot,
-  query, orderBy, limit, where
+  query, orderBy, limit, where,
+  writeBatch, Timestamp
 } from 'firebase/firestore';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { Observable } from 'rxjs';
 import { Cajon, Usuario, Cliente, ActividadReciente, Pago, SustentabilidadData, ReporteHistorial, ConfigTarifa, HistorialTarifa } from '../models/kaakpark.models';
 import { environment } from '../../environments/environment';
-import { Secuencia } from '../services/mqtt-robot.service';
+import { Secuencia, PasoSecuencia } from '../services/mqtt-robot.service';
 
 @Injectable({ providedIn: 'root' })
 export class FirebaseService {
@@ -203,6 +204,31 @@ updateSecuencia(id: string, cambios: Partial<Secuencia>): Promise<void> {
   async addPago(pago: Pago): Promise<any> {
     return addDoc(collection(this.db, 'pagos'), pago as any);
   }
+
+  updatePago(id: string, cambios: Partial<Pago>): Promise<void> {
+    return updateDoc(doc(this.db, `pagos/${id}`), cambios as any);
+  }
+
+  async finalizarEstanciaAdmin(estanciaId: string, cajonId: string): Promise<void> {
+  const batch = writeBatch(this.db);
+  batch.update(doc(this.db, `estancias/${estanciaId}`), {
+    estatus: 'FINALIZADA',
+    estatusPago: 'PAGADA',
+    fechaSalida: Timestamp.now()
+  });
+  batch.update(doc(this.db, `cajones-dev/${cajonId}`), {
+    estado: 'Libre',
+    horaEntrada: '',
+    placa: ''
+  });
+  return batch.commit();
+}
+
+async fetchPasosSecuencia(secuenciaId: string): Promise<PasoSecuencia[]> {
+  const snap = await getDoc(doc(this.db, `secuencias/${secuenciaId}`));
+  if (!snap.exists()) return [];
+  return ((snap.get('pasos') as any[]) || []) as PasoSecuencia[];
+}
 
   // ─── TARIFA ────────────────────────────────────────
   getTarifa(): Observable<ConfigTarifa> {

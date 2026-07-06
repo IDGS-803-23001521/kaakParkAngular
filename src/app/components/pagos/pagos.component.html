@@ -22,11 +22,49 @@
           <span style="color:var(--gold);">${{ tarifaPorHora }}</span>
         </div>
         <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
-          <button style="font-size:0.7rem;padding:3px 10px;border-radius:6px;border:1.5px solid var(--gold);background:transparent;color:var(--gold);cursor:pointer;font-weight:600;"
-                  (click)="abrirEdicionTarifa()">Editar</button>
-          <button style="font-size:0.7rem;padding:3px 10px;border-radius:6px;border:1.5px solid #ccc;background:transparent;color:#888;cursor:pointer;"
-                  (click)="mostrarHistorialTarifa=!mostrarHistorialTarifa">Historial</button>
+          <button
+            style="font-size:0.7rem;padding:3px 10px;border-radius:6px;border:1.5px solid var(--gold);background:transparent;color:var(--gold);cursor:pointer;font-weight:600;"
+            (click)="abrirEdicionTarifa()">Editar</button>
+          <button
+            style="font-size:0.7rem;padding:3px 10px;border-radius:6px;border:1.5px solid #ccc;background:transparent;color:#888;cursor:pointer;"
+            (click)="mostrarHistorialTarifa=!mostrarHistorialTarifa">Historial</button>
         </div>
+      </div>
+    </div>
+
+    <div class="card-kaak pagos-pendientes-card" *ngIf="pagosPendientesCaja.length > 0"
+      style="border-left:4px solid var(--gold);margin-bottom:1rem;">
+
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.5rem;">
+        <h5 style="margin:0;color:var(--gold);">Pagos en espera — cobrar en ventanilla</h5>
+        <span class="tab-count tab-count-gold">{{ pagosPendientesCaja.length }}</span>
+      </div>
+      <div class="motor-hint">
+        El cliente eligió pagar en caja y te está esperando. Cobra el efectivo y confirma para liberar su vehículo y
+        activar el mecanismo.
+      </div>
+
+      <div class="motor-seq-saved-item" *ngFor="let p of pagosPendientesCaja"
+        style="flex-wrap:wrap;gap:10px;padding:12px 0;">
+
+        <div style="flex:1;min-width:200px;">
+          <div style="font-weight:700;font-size:0.88rem;color:#1a1a1a;">
+            {{ p.cajonDescripcion }} &nbsp;·&nbsp; Folio {{ p.folio }}
+          </div>
+          <div style="font-size:0.75rem;color:#888;margin-top:3px;">
+            Entrada: {{ p.horaEntrada }} &nbsp;·&nbsp; Solicitado desde la app &nbsp;·&nbsp; {{ p.metodo }}
+          </div>
+        </div>
+
+        <div style="font-weight:800;font-size:1.2rem;color:var(--gold);display:flex;align-items:center;">
+          ${{ p.monto }} MXN
+        </div>
+
+        <button class="btn-guardar" style="flex:0 0 auto;padding:8px 20px;font-size:0.88rem;" [disabled]="confirmando"
+          (click)="confirmarPagoCaja(p)">
+          {{ confirmando ? 'Confirmando…' : '✓ Cobrado — confirmar y liberar' }}
+        </button>
+
       </div>
     </div>
 
@@ -40,12 +78,14 @@
         <!-- Cajón ocupado -->
         <div class="form-group" style="margin-bottom:1rem;">
           <label>Cajón a cobrar</label>
-          <select [(ngModel)]="cajonSeleccionadoId" style="background:#f6f6f6;border:1.5px solid #e5e5e5;border-radius:9px;padding:9px 12px;font-size:0.87rem;color:#222;outline:none;width:100%;transition:border-color .18s;"
-                  [style.border-color]="cajonSeleccionadoId ? 'var(--gold)' : ''">
+          <select [(ngModel)]="cajonSeleccionadoId"
+            style="background:#f6f6f6;border:1.5px solid #e5e5e5;border-radius:9px;padding:9px 12px;font-size:0.87rem;color:#222;outline:none;width:100%;transition:border-color .18s;"
+            [style.border-color]="cajonSeleccionadoId ? 'var(--gold)' : ''">
             <option value="">-- Selecciona un cajón ocupado --</option>
             <option *ngFor="let cj of cajonesOcupados" [value]="cj.id">{{ displayCajon(cj) }}</option>
           </select>
-          <div *ngIf="cajonesOcupados.length === 0" style="font-size:0.78rem;color:#aaa;margin-top:5px;">No hay cajones ocupados en este momento</div>
+          <div *ngIf="cajonesOcupados.length === 0" style="font-size:0.78rem;color:#aaa;margin-top:5px;">No hay cajones
+            ocupados en este momento</div>
         </div>
 
         <!-- Resumen del cajón seleccionado -->
@@ -74,15 +114,18 @@
 
         <!-- Método de pago -->
         <div *ngIf="cajonSeleccionado" style="margin-bottom:1rem;">
-          <label style="font-size:0.7rem;font-weight:700;color:#777;text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:8px;">Método de pago</label>
+          <label
+            style="font-size:0.7rem;font-weight:700;color:#777;text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:8px;">Método
+            de pago</label>
           <div class="pagos-metodo-tabs">
-            <button class="pagos-metodo-btn" [class.active]="metodoPago==='Efectivo'"     (click)="metodoPago='Efectivo'">
+            <button class="pagos-metodo-btn" [class.active]="metodoPago==='Efectivo'" (click)="metodoPago='Efectivo'">
               <span class="pagos-metodo-icon">💵</span> Efectivo
             </button>
-            <button class="pagos-metodo-btn" [class.active]="metodoPago==='Transferencia'" (click)="metodoPago='Transferencia'">
+            <button class="pagos-metodo-btn" [class.active]="metodoPago==='Transferencia'"
+              (click)="metodoPago='Transferencia'">
               <span class="pagos-metodo-icon">🏦</span> Transferencia
             </button>
-            <button class="pagos-metodo-btn" [class.active]="metodoPago==='Tarjeta'"      (click)="metodoPago='Tarjeta'">
+            <button class="pagos-metodo-btn" [class.active]="metodoPago==='Tarjeta'" (click)="metodoPago='Tarjeta'">
               <span class="pagos-metodo-icon">💳</span> Tarjeta
             </button>
           </div>
@@ -95,10 +138,13 @@
           <div class="pagos-detalle-fila"><span>Titular</span><strong>{{ DATOS_TRANSFERENCIA.titular }}</strong></div>
           <div class="pagos-detalle-fila">
             <span>CLABE</span>
-            <strong style="font-family:monospace;letter-spacing:2px;font-size:0.92rem;">{{ DATOS_TRANSFERENCIA.clabe }}</strong>
+            <strong style="font-family:monospace;letter-spacing:2px;font-size:0.92rem;">{{ DATOS_TRANSFERENCIA.clabe
+              }}</strong>
           </div>
-          <div class="pagos-detalle-fila"><span>Monto</span><strong style="color:var(--gold);">${{ montoCalculado }} MXN</strong></div>
-          <div style="font-size:0.72rem;color:#aaa;margin-top:8px;">Confirma el pago después de recibir el comprobante de transferencia.</div>
+          <div class="pagos-detalle-fila"><span>Monto</span><strong style="color:var(--gold);">${{ montoCalculado }}
+              MXN</strong></div>
+          <div style="font-size:0.72rem;color:#aaa;margin-top:8px;">Confirma el pago después de recibir el comprobante
+            de transferencia.</div>
         </div>
 
         <!-- Detalles: Tarjeta -->
@@ -111,14 +157,14 @@
               <div style="font-size:0.75rem;color:#888;margin-top:2px;">Tarjeta de débito o crédito</div>
             </div>
           </div>
-          <div class="pagos-detalle-fila"><span>Monto a cobrar</span><strong style="color:var(--gold);">${{ montoCalculado }} MXN</strong></div>
-          <div style="font-size:0.72rem;color:#aaa;margin-top:8px;">Registra el pago una vez que la terminal confirme la transacción.</div>
+          <div class="pagos-detalle-fila"><span>Monto a cobrar</span><strong style="color:var(--gold);">${{
+              montoCalculado }} MXN</strong></div>
+          <div style="font-size:0.72rem;color:#aaa;margin-top:8px;">Registra el pago una vez que la terminal confirme la
+            transacción.</div>
         </div>
 
-        <button class="btn-guardar"
-                style="width:100%;margin-top:1.25rem;padding:12px;font-size:0.95rem;"
-                [disabled]="!cajonSeleccionadoId || procesando"
-                (click)="registrarPago()">
+        <button class="btn-guardar" style="width:100%;margin-top:1.25rem;padding:12px;font-size:0.95rem;"
+          [disabled]="!cajonSeleccionadoId || procesando" (click)="registrarPago()">
           {{ procesando ? 'Procesando…' : '✓ Registrar y generar ticket' }}
         </button>
       </div>
@@ -133,7 +179,7 @@
           </div>
         </div>
         <div *ngIf="!hayIngresosMensuales"
-             style="flex:1;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:0.85rem;min-height:200px;text-align:center;">
+          style="flex:1;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:0.85rem;min-height:200px;text-align:center;">
           Sin ingresos registrados aún.<br>Los pagos del año aparecerán aquí.
         </div>
       </div>
@@ -141,7 +187,8 @@
 
     <!-- ── Filtros + historial ────────────────────────────────────────────── -->
     <div class="card-kaak pagos-historial-card card-scroll">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:0.75rem;flex-shrink:0;">
+      <div
+        style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:0.75rem;flex-shrink:0;">
         <h5 style="margin:0;">Historial de Pagos</h5>
       </div>
 
@@ -175,41 +222,42 @@
       </div>
 
       <div class="card-scroll-body" style="overflow-x:auto;">
-      <table class="pagos-tabla" *ngIf="pagosFiltrados.length > 0">
-        <thead>
-          <tr>
-            <th>Folio</th>
-            <th>Cajón</th>
-            <th>Placa</th>
-            <th>Entrada</th>
-            <th>Salida</th>
-            <th>Duración</th>
-            <th>Método</th>
-            <th>Monto</th>
-            <th>Estado</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let p of pagosFiltrados">
-            <td style="font-family:monospace;font-size:0.78rem;color:#888;">{{ p.folio }}</td>
-            <td>{{ p.cajonDescripcion }}</td>
-            <td>{{ p.placa }}</td>
-            <td>{{ p.horaEntrada }}</td>
-            <td>{{ p.horaSalida }}</td>
-            <td>{{ p.duracionMin }} min</td>
-            <td>{{ p.metodo }}</td>
-            <td style="font-weight:700;color:#111;">${{ p.monto }}</td>
-            <td>
-              <span class="pagos-estado-chip" [class.completado]="p.estado==='Completado'" [class.pendiente]="p.estado==='Pendiente'">
-                {{ p.estado }}
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <div *ngIf="pagosFiltrados.length === 0" class="pagos-empty-msg">
-        Sin pagos en el rango seleccionado
-      </div>
+        <table class="pagos-tabla" *ngIf="pagosFiltrados.length > 0">
+          <thead>
+            <tr>
+              <th>Folio</th>
+              <th>Cajón</th>
+              <th>Placa</th>
+              <th>Entrada</th>
+              <th>Salida</th>
+              <th>Duración</th>
+              <th>Método</th>
+              <th>Monto</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of pagosFiltrados">
+              <td style="font-family:monospace;font-size:0.78rem;color:#888;">{{ p.folio }}</td>
+              <td>{{ p.cajonDescripcion }}</td>
+              <td>{{ p.placa }}</td>
+              <td>{{ p.horaEntrada }}</td>
+              <td>{{ p.horaSalida }}</td>
+              <td>{{ p.duracionMin }} min</td>
+              <td>{{ p.metodo }}</td>
+              <td style="font-weight:700;color:#111;">${{ p.monto }}</td>
+              <td>
+                <span class="pagos-estado-chip" [class.completado]="p.estado==='Completado'"
+                  [class.pendiente]="p.estado==='Pendiente'">
+                  {{ p.estado }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div *ngIf="pagosFiltrados.length === 0" class="pagos-empty-msg">
+          Sin pagos en el rango seleccionado
+        </div>
       </div>
     </div>
 
@@ -224,27 +272,27 @@
       <button class="modal-close-btn" (click)="mostrarHistorialTarifa=false">✕</button>
     </div>
     <div style="max-height:60vh;overflow-y:auto;">
-    <table class="pagos-tabla" *ngIf="historialTarifas.length > 0">
-      <thead>
-        <tr>
-          <th>Fecha y hora</th>
-          <th>Tarifa anterior</th>
-          <th>Tarifa nueva</th>
-          <th>Modificado por</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let h of historialTarifas">
-          <td style="font-size:0.82rem;color:#666;">{{ formatFecha(h.timestamp) }}</td>
-          <td style="text-decoration:line-through;color:#aaa;">${{ h.tarifaAnterior }}/hr</td>
-          <td style="font-weight:700;color:var(--gold);">${{ h.tarifaNueva }}/hr</td>
-          <td style="font-size:0.82rem;color:#888;">{{ h.actualizadoPor || '—' }}</td>
-        </tr>
-      </tbody>
-    </table>
-    <div *ngIf="historialTarifas.length === 0" class="pagos-empty-msg">
-      Sin cambios registrados aún
-    </div>
+      <table class="pagos-tabla" *ngIf="historialTarifas.length > 0">
+        <thead>
+          <tr>
+            <th>Fecha y hora</th>
+            <th>Tarifa anterior</th>
+            <th>Tarifa nueva</th>
+            <th>Modificado por</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let h of historialTarifas">
+            <td style="font-size:0.82rem;color:#666;">{{ formatFecha(h.timestamp) }}</td>
+            <td style="text-decoration:line-through;color:#aaa;">${{ h.tarifaAnterior }}/hr</td>
+            <td style="font-weight:700;color:var(--gold);">${{ h.tarifaNueva }}/hr</td>
+            <td style="font-size:0.82rem;color:#888;">{{ h.actualizadoPor || '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div *ngIf="historialTarifas.length === 0" class="pagos-empty-msg">
+        Sin cambios registrados aún
+      </div>
     </div>
   </div>
 </div>
@@ -256,12 +304,14 @@
     <div class="pagos-ticket-header">
       <div style="font-size:0.75rem;color:#888;text-transform:uppercase;letter-spacing:.1em;">K'áaxPark</div>
       <div style="font-size:1.25rem;font-weight:800;color:#111;margin:4px 0;">Ticket de Pago</div>
-      <div style="font-family:monospace;font-size:0.82rem;color:var(--gold);font-weight:700;">{{ ticketPago.folio }}</div>
+      <div style="font-family:monospace;font-size:0.82rem;color:var(--gold);font-weight:700;">{{ ticketPago.folio }}
+      </div>
     </div>
 
     <div class="pagos-ticket-body">
       <div class="pagos-ticket-fila"><span>Cajón</span><strong>{{ ticketPago.cajonDescripcion }}</strong></div>
-      <div class="pagos-ticket-fila" *ngIf="ticketPago.placa !== '—'"><span>Placa</span><strong>{{ ticketPago.placa }}</strong></div>
+      <div class="pagos-ticket-fila" *ngIf="ticketPago.placa !== '—'"><span>Placa</span><strong>{{ ticketPago.placa
+          }}</strong></div>
       <div class="pagos-ticket-fila"><span>Fecha</span><strong>{{ ticketPago.fecha }}</strong></div>
       <div class="pagos-ticket-fila"><span>Hora entrada</span><strong>{{ ticketPago.horaEntrada }}</strong></div>
       <div class="pagos-ticket-fila"><span>Hora salida</span><strong>{{ ticketPago.horaSalida }}</strong></div>
@@ -274,13 +324,14 @@
       </div>
     </div>
 
-    <div style="text-align:center;font-size:0.7rem;color:#aaa;margin-top:0.75rem;padding-top:0.75rem;border-top:1px dashed #e5e5e5;">
+    <div
+      style="text-align:center;font-size:0.7rem;color:#aaa;margin-top:0.75rem;padding-top:0.75rem;border-top:1px dashed #e5e5e5;">
       ¡Gracias por usar K'áaxPark! · Tarifa $60/hora o fracción
     </div>
 
     <div class="pagos-ticket-acciones" id="ticket-no-print">
       <button class="btn-cancelar" (click)="cerrarTicket()">Cerrar</button>
-      <button class="btn-guardar"  (click)="imprimirTicket()">🖨 Imprimir</button>
+      <button class="btn-guardar" (click)="imprimirTicket()">🖨 Imprimir</button>
     </div>
   </div>
 </div>
@@ -290,7 +341,8 @@
   <div class="modal-card" style="width:400px;text-align:left;">
     <div class="modal-icon">💲</div>
     <h5 style="text-align:center;">Editar Tarifa por Hora</h5>
-    <p class="modal-sub" style="text-align:center;">Define el monto que se cobra por hora o fracción de estacionamiento.</p>
+    <p class="modal-sub" style="text-align:center;">Define el monto que se cobra por hora o fracción de estacionamiento.
+    </p>
 
     <div style="margin-bottom:1rem;">
       <label class="modal-field-label">Tarifa actual</label>
@@ -308,7 +360,7 @@
     <div class="form-actions" style="margin-top:0.5rem;">
       <button class="btn-cancelar" (click)="cancelarEdicionTarifa()">Cancelar</button>
       <button class="btn-guardar" [disabled]="nuevaTarifa <= 0 || guardandoTarifa || nuevaTarifa === tarifaPorHora"
-              (click)="guardarTarifa()">
+        (click)="guardarTarifa()">
         {{ guardandoTarifa ? 'Guardando…' : 'Guardar cambio' }}
       </button>
     </div>

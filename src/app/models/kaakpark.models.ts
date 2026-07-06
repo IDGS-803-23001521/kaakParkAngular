@@ -72,9 +72,11 @@ export interface Pago {
   duracionMin: number;
   monto: number;
   metodo: 'Efectivo' | 'Transferencia' | 'Tarjeta';
-  estado: 'Completado' | 'Pendiente';
+  estado: 'Completado' | 'Pendiente' | 'PendienteCaja';
   fecha: string;
   timestamp: number;
+  estanciaId?: string;
+  pagadoPorApp?: boolean;
 }
 
 export interface ReporteHistorial {

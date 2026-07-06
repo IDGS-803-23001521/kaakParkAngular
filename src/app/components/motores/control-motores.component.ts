@@ -94,21 +94,21 @@ export class ControlMotoresComponent implements OnInit, OnDestroy {
   // ---- Control manual ----------------------------------------------
   async enviarComando(motor: 'P1' | 'P2'): Promise<void> {
     const pasos = motor === 'P1' ? this.p1Pasos : this.p2Pasos;
-    const vel = motor === 'P1' ? this.p1Vel : this.p2Vel;
+    const vel   = motor === 'P1' ? Number(this.p1Vel) : Number(this.p2Vel);
     try {
-      await this.robot.comando(motor, pasos, vel);
-      this.toast(`${motor}: ${pasos} pasos`, 'ok');
+        await this.robot.comando(motor, pasos, vel);
+        this.toast(`${motor}: ${pasos} pasos`, 'ok');
     } catch (e: any) {
-      this.toast(e?.message === 'ocupado' ? 'El robot está ocupado con otra acción, espera' : 'Error de comunicación', 'err');
+        this.toast(e?.message === 'ocupado' ? 'El robot está ocupado, espera' : 'Error de comunicación', 'err');
     }
   }
 
   async enviarDC(motor: string): Promise<void> {
     try {
-      await this.robot.comando(motor, this.dcVel[motor]);
-      this.toast(`${motor}: velocidad ${this.dcVel[motor]}`, 'ok');
+        await this.robot.comando(motor, Number(this.dcVel[motor]));
+        this.toast(`${motor}: velocidad ${this.dcVel[motor]}`, 'ok');
     } catch (e: any) {
-      this.toast(e?.message === 'ocupado' ? 'El robot está ocupado con otra acción, espera' : 'Error de comunicación', 'err');
+        this.toast(e?.message === 'ocupado' ? 'El robot está ocupado, espera' : 'Error de comunicación', 'err');
     }
   }
 
@@ -124,21 +124,19 @@ export class ControlMotoresComponent implements OnInit, OnDestroy {
 
   // ---- Constructor de secuencias: agregar directo desde cada tarjeta ----
   agregarDesdeMotor(motor: 'P1' | 'P2'): void {
-    const valor = motor === 'P1' ? this.p1Pasos : this.p2Pasos;
-    const velocidad = motor === 'P1' ? this.p1Vel : this.p2Vel;
+    const valor     = motor === 'P1' ? this.p1Pasos : this.p2Pasos;
+    const velocidad = motor === 'P1' ? Number(this.p1Vel) : Number(this.p2Vel);
     this.pasos.push({ tipo: motor, valor, velocidad });
-    console.log('[pasos] agregado', motor, '-> lista actual:', this.pasos);
     this.toast(`${motor} agregado a la secuencia`, 'info');
   }
 
   agregarDC(motor: string): void {
-    this.pasos.push({ tipo: motor, valor: this.dcVel[motor] });
-    console.log('[pasos] agregado', motor, '-> lista actual:', this.pasos);
+    this.pasos.push({ tipo: motor, valor: Number(this.dcVel[motor]) });
     this.toast(`${motor} agregado a la secuencia`, 'info');
   }
 
   agregarEsperar(): void {
-    this.pasos.push({ tipo: 'ESPERAR', valor: this.esperarMs });
+    this.pasos.push({ tipo: 'ESPERAR', valor: Number(this.esperarMs) });
     this.toast('Espera agregada', 'info');
   }
 
