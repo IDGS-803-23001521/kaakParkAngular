@@ -22,71 +22,81 @@
       </div>
     </div>
 
+    <!-- ── Filtro de fechas: aplica a KPIs, gráficas y generador ──────────── -->
+    <div class="card-kaak" style="flex-direction:row; align-items:center; gap:1rem; flex-wrap:wrap; padding:0.85rem 1.35rem; flex-shrink:0;">
+      <label style="margin:0; font-size:0.78rem; color:#555; font-weight:600;">Desde</label>
+      <input type="date" class="filtro-input" style="max-width:170px;" [(ngModel)]="fechaInicio" [max]="fechaFin" (ngModelChange)="onRangoChange()" />
+      <label style="margin:0; font-size:0.78rem; color:#555; font-weight:600;">Hasta</label>
+      <input type="date" class="filtro-input" style="max-width:170px;" [(ngModel)]="fechaFin" [min]="fechaInicio" (ngModelChange)="onRangoChange()" />
+      <span style="font-size:0.76rem; color:#999; margin-left:auto;">Este rango aplica a las gráficas y al generador de reportes</span>
+    </div>
+
     <div class="reportes-grid">
 
-      <div class="reportes-left">
-        <div class="card-kaak form-kaak">
-          <h5>Generador de reportes</h5>
-          <label>Período</label>
-          <select [(ngModel)]="periodo" (ngModelChange)="onPeriodoChange()" style="margin-bottom:1rem;">
-            <option value="7d">Últimos 7 días</option>
-            <option value="1m">Último mes</option>
-            <option value="3m">Últimos 3 meses</option>
-            <option value="6m">Últimos 6 meses</option>
-            <option value="1y">Último año</option>
-          </select>
-          <label>Módulo</label>
-          <select [(ngModel)]="modulo" style="margin-bottom:1.25rem;">
-            <option value="general">General (todos los módulos)</option>
-            <option value="pagos">Pagos</option>
-            <option value="cajones">Cajones</option>
-            <option value="control-motores">Control de Motores</option>
-            <option value="sustentabilidad">Sustentabilidad</option>
-          </select>
-          <button class="btn-gold" [disabled]="generando" (click)="generarReporte()">
-            {{ generando ? 'Generando…' : 'Generar reporte' }}
-          </button>
+      <div class="card-kaak form-kaak reportes-cell-tl">
+        <h5>Generador de reportes</h5>
+        <label>Módulo</label>
+        <select [(ngModel)]="modulo" style="margin-bottom:1.25rem;">
+          <option value="general">General (todos los módulos)</option>
+          <option value="pagos">Pagos</option>
+          <option value="cajones">Cajones</option>
+          <option value="control-motores">Control de Motores</option>
+          <option value="sustentabilidad">Sustentabilidad</option>
+        </select>
+        <div style="font-size:0.78rem; color:#999; margin-bottom:1rem;">
+          Se generará con el rango de fechas de arriba: <strong style="color:#555;">{{ periodoLabel }}</strong>
         </div>
-        <div class="card-kaak" style="flex:1;">
-          <h5>Tendencias Anuales — Entradas / Salidas</h5>
-          <div class="chart-fill"><canvas #lineChartCanvas></canvas></div>
+        <button class="btn-gold" [disabled]="generando" (click)="generarReporte()">
+          {{ generando ? 'Generando…' : 'Generar reporte' }}
+        </button>
+      </div>
+
+      <div class="card-kaak reportes-cell-tr" style="text-align:center;">
+        <h5 style="text-align:left;">Métricas clave ({{ periodoLabel }})</h5>
+        <div style="display:flex;flex-direction:column;gap:1rem;">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:0.75rem;">
+            <canvas #donutCanvas width="160" height="160"></canvas>
+            <div *ngIf="hayDatosEstancias" style="display:flex;gap:1.2rem;justify-content:center;flex-wrap:wrap;">
+              <div style="display:flex;align-items:center;gap:5px;font-size:0.8rem;">
+                <span style="width:10px;height:10px;border-radius:50%;background:#C9A227;display:inline-block;"></span> &lt;1h: {{ distribucionEstancias[0] }}%
+              </div>
+              <div style="display:flex;align-items:center;gap:5px;font-size:0.8rem;">
+                <span style="width:10px;height:10px;border-radius:50%;background:#aaa;display:inline-block;"></span> 1-3h: {{ distribucionEstancias[1] }}%
+              </div>
+              <div style="display:flex;align-items:center;gap:5px;font-size:0.8rem;">
+                <span style="width:10px;height:10px;border-radius:50%;background:#333;display:inline-block;"></span> &gt;3h: {{ distribucionEstancias[2] }}%
+              </div>
+            </div>
+            <div *ngIf="!hayDatosEstancias" style="font-size:0.78rem;color:#bbb;">Sin pagos completados en este período</div>
+          </div>
+          <div style="border-top:1px solid #eee;padding-top:0.75rem;" hidden>
+            <div style="font-size:0.75rem;font-weight:700;color:#555;margin-bottom:8px;text-align:center;">Ocupación actual por Nivel</div>
+            <canvas #barNivelCanvas height="90"></canvas>
+          </div>
         </div>
       </div>
 
-      <div class="reportes-right">
-        <div class="card-kaak">
-          <h5>Métricas clave ({{ periodoLabel }})</h5>
-          <div style="display:flex;flex-direction:column;gap:1rem;">
-            <div style="display:flex;flex-direction:column;align-items:center;gap:0.75rem;">
-              <canvas #donutCanvas width="160" height="160"></canvas>
-              <div *ngIf="hayDatosEstancias" style="display:flex;gap:1.2rem;justify-content:center;flex-wrap:wrap;">
-                <div style="display:flex;align-items:center;gap:5px;font-size:0.8rem;">
-                  <span style="width:10px;height:10px;border-radius:50%;background:#C9A227;display:inline-block;"></span> &lt;1h: {{ distribucionEstancias[0] }}%
-                </div>
-                <div style="display:flex;align-items:center;gap:5px;font-size:0.8rem;">
-                  <span style="width:10px;height:10px;border-radius:50%;background:#aaa;display:inline-block;"></span> 1-3h: {{ distribucionEstancias[1] }}%
-                </div>
-                <div style="display:flex;align-items:center;gap:5px;font-size:0.8rem;">
-                  <span style="width:10px;height:10px;border-radius:50%;background:#333;display:inline-block;"></span> &gt;3h: {{ distribucionEstancias[2] }}%
-                </div>
-              </div>
-              <div *ngIf="!hayDatosEstancias" style="font-size:0.78rem;color:#bbb;">Sin pagos completados en este período</div>
-            </div>
-            <div style="border-top:1px solid #eee;padding-top:0.75rem;">
-              <div style="font-size:0.75rem;font-weight:700;color:#555;margin-bottom:8px;text-align:center;">Ocupación actual por Nivel</div>
-              <canvas #barNivelCanvas height="90"></canvas>
-            </div>
-          </div>
+      <div class="card-kaak card-scroll reportes-cell-bl">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; flex-shrink:0; margin-bottom:0.5rem;">
+          <h5 style="margin:0;">Análisis y tendencias</h5>
+          <select class="filtro-select" style="max-width:220px;" [(ngModel)]="chartTipo" (ngModelChange)="onChartTipoChange()">
+            <option value="entradas-salidas">Entradas / Salidas</option>
+            <option value="ingresos">Ingresos</option>
+            <option value="metodos-pago">Métodos de pago</option>
+            <option value="ocupacion-nivel">Ocupación por nivel</option>
+          </select>
         </div>
-        <div class="card-kaak card-scroll" style="flex: 1;">
-          <h5>Historial de reportes generados</h5>
-          <div class="card-scroll-body">
-          <div *ngFor="let r of historial" class="historial-item">
-            <div><div class="hi-name">{{r.nombre}}</div><div class="hi-fecha">{{r.fecha}}</div></div>
-            <button class="btn-descargar" (click)="verReporte(r)">⬇</button>
-          </div>
-          <div *ngIf="historial.length===0" style="text-align:center;color:#aaa;padding:1rem;font-size:0.85rem;">Sin reportes generados</div>
-          </div>
+        <div class="chart-fill"><canvas #mainChartCanvas></canvas></div>
+      </div>
+
+      <div class="card-kaak card-scroll reportes-cell-br">
+        <h5>Historial de reportes generados</h5>
+        <div class="card-scroll-body">
+        <div *ngFor="let r of historial" class="historial-item">
+          <div><div class="hi-name">{{r.nombre}}</div><div class="hi-fecha">{{r.fecha}}</div></div>
+          <button class="btn-descargar" (click)="verReporte(r)">⬇</button>
+        </div>
+        <div *ngIf="historial.length===0" style="text-align:center;color:#aaa;padding:1rem;font-size:0.85rem;">Sin reportes generados</div>
         </div>
       </div>
 

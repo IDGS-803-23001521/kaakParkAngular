@@ -1,5 +1,8 @@
 <div class="login-page" style="background-image: url('assets/images/FONDO_LOGIN.png');">
   <div class="login-card">
+    <div class="login-logo">
+      <img src="assets/images/Logo.png" alt="K'áaxPark" />
+    </div>
     <div class="login-title">
       <div class="login-title">
         <h2>K'áax<span class="gold">Park</span></h2>
@@ -9,11 +12,13 @@
     <div class="alert-error" *ngIf="error">{{ error }}</div>
     <div class="input-group-kaak">
       <img class="icon" src="assets/images/UsuarioD.png" alt="" />
-      <input type="email" placeholder="Correo electrónico" [(ngModel)]="email" autocomplete="off" />
+      <input type="email" placeholder="Correo electrónico" [(ngModel)]="email" autocomplete="off"
+        (keyup.enter)="onLogin()" />
     </div>
     <div class="input-group-kaak">
       <img class="icon" src="assets/images/candado.png" alt="" />
-      <input [type]="showPassword ? 'text' : 'password'" placeholder="Contraseña" [(ngModel)]="password" />
+      <input [type]="showPassword ? 'text' : 'password'" placeholder="Contraseña" [(ngModel)]="password"
+        (keyup.enter)="onLogin()" />
       <button type="button" class="eye-btn" (click)="togglePassword()">
         <img src="assets/images/Ojo.png" alt="ver" />
       </button>

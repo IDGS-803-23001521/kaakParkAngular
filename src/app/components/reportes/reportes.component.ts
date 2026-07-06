@@ -6,22 +6,6 @@ import { Secuencia } from '../../services/mqtt-robot.service';
 
 declare const Chart: any;
 
-const PERIODO_MS: Record<string, number> = {
-  '7d': 7   * 86400000,
-  '1m': 30  * 86400000,
-  '3m': 90  * 86400000,
-  '6m': 180 * 86400000,
-  '1y': 365 * 86400000
-};
-
-const PERIODO_LABEL: Record<string, string> = {
-  '7d': 'Últimos 7 días',
-  '1m': 'Último mes',
-  '3m': 'Últimos 3 meses',
-  '6m': 'Últimos 6 meses',
-  '1y': 'Último año'
-};
-
 const MODULO_LABEL: Record<string, string> = {
   'general':          'General',
   'pagos':            'Pagos',
@@ -30,26 +14,41 @@ const MODULO_LABEL: Record<string, string> = {
   'control-motores':  'Control de Motores'
 };
 
+type ChartTipo = 'entradas-salidas' | 'ingresos' | 'metodos-pago' | 'ocupacion-nivel';
+
+const CHART_TIPO_LABEL: Record<ChartTipo, string> = {
+  'entradas-salidas': 'Entradas / Salidas',
+  'ingresos':         'Ingresos',
+  'metodos-pago':     'Métodos de pago',
+  'ocupacion-nivel':  'Ocupación por nivel'
+};
+
 @Component({
   standalone: false,
   selector: 'app-reportes',
   templateUrl: './reportes.component.html'
 })
 export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
-  @ViewChild('donutCanvas')    donutCanvas!: ElementRef;
-  @ViewChild('barNivelCanvas') barNivelCanvas!: ElementRef;
-  @ViewChild('lineChartCanvas') lineChartCanvas!: ElementRef;
+  @ViewChild('mainChartCanvas') mainChartCanvas!: ElementRef;
+  @ViewChild('donutCanvas')     donutCanvas!: ElementRef;
+  @ViewChild('barNivelCanvas')  barNivelCanvas!: ElementRef;
 
   // ── Datos reales ─────────────────────────────────────────────────────────
   cajones: Cajon[]                     = [];
   pagos: Pago[]                        = [];
-  actividadAnio: ActividadReciente[]   = [];
+  actividad: ActividadReciente[]       = [];
   sustentabilidad: SustentabilidadData | null = null;
   secuencias: Secuencia[]              = [];
   historial: ReporteHistorial[]        = [];
 
-  // ── Filtros del generador ───────────────────────────────────────────────
-  periodo = '7d';
+  // ── Rango de fechas — aplica a KPIs, gráficas y generador ────────────────
+  fechaInicio = this.hace(6);
+  fechaFin    = this.hoy();
+
+  // ── Gráfica intercambiable ────────────────────────────────────────────────
+  chartTipo: ChartTipo = 'entradas-salidas';
+
+  // ── Generador de reportes ───────────────────────────────────────────────
   modulo  = 'general';
   generando = false;
 
@@ -58,30 +57,41 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
   reporteVer: ReporteHistorial | null = null;
 
   private subs: Subscription[] = [];
+  private actividadSub?: Subscription;
   private chartsReady = false;
-  private chartLine: any = null;
+  private chartMain: any = null;
   private chartDonut: any = null;
   private chartBar: any = null;
 
   constructor(private fb: FirebaseService) {}
 
-  // ── Helpers de período ───────────────────────────────────────────────────
-  get periodoLabel(): string { return PERIODO_LABEL[this.periodo] ?? 'Período'; }
-  get moduloLabel(): string { return MODULO_LABEL[this.modulo] ?? this.modulo; }
+  private hoy(): string { return new Date().toISOString().slice(0, 10); }
+  private hace(dias: number): string { return new Date(Date.now() - dias * 86400000).toISOString().slice(0, 10); }
 
-  private get desdePeriodo(): number {
-    return Date.now() - (PERIODO_MS[this.periodo] ?? PERIODO_MS['7d']);
+  // ── Rango en timestamps (inicio del día / fin del día) ───────────────────
+  private get desdeTs(): number { return new Date(this.fechaInicio + 'T00:00:00').getTime(); }
+  private get hastaTs(): number { return new Date(this.fechaFin + 'T23:59:59').getTime(); }
+
+  get periodoLabel(): string {
+    return `${this.formatDMY(this.fechaInicio)} – ${this.formatDMY(this.fechaFin)}`;
   }
 
-  // ── Datos filtrados por período ──────────────────────────────────────────
+  get moduloLabel(): string { return MODULO_LABEL[this.modulo] ?? this.modulo; }
+  get chartTipoLabel(): string { return CHART_TIPO_LABEL[this.chartTipo]; }
+
+  private formatDMY(iso: string): string {
+    const [y, m, d] = iso.split('-');
+    return `${d}/${m}/${y}`;
+  }
+
+  // ── Datos filtrados por el rango elegido ─────────────────────────────────
   get pagosPeriodo(): Pago[] {
-    const desde = this.desdePeriodo;
-    return this.pagos.filter(p => p.timestamp >= desde);
+    const desde = this.desdeTs, hasta = this.hastaTs;
+    return this.pagos.filter(p => p.timestamp >= desde && p.timestamp <= hasta);
   }
 
   get actividadPeriodo(): ActividadReciente[] {
-    const desde = this.desdePeriodo;
-    return this.actividadAnio.filter(a => a.timestamp >= desde);
+    return this.actividad; // ya viene acotada por la consulta a Firestore
   }
 
   // ── KPIs del período ──────────────────────────────────────────────────────
@@ -124,21 +134,70 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
     return Math.round(this.cajones.filter(c => c.estado === 'Ocupado').length / total * 100);
   }
 
-  // ── Datos para gráfica de líneas: entradas/salidas mensuales del año ─────
-  get datosLineaMensual(): { entradas: number[]; salidas: number[] } {
-    const anio = new Date().getFullYear();
-    const entradas = Array(12).fill(0);
-    const salidas  = Array(12).fill(0);
-    for (const a of this.actividadAnio) {
-      const d = new Date(a.timestamp);
-      if (d.getFullYear() !== anio) continue;
-      if (a.tipo === 'entrada') entradas[d.getMonth()]++;
-      else if (a.tipo === 'salida') salidas[d.getMonth()]++;
-    }
-    return { entradas, salidas };
+  // ── Buckets de tiempo: por día si el rango es corto, por mes si es largo ──
+  private get granularidad(): 'day' | 'month' {
+    const dias = (this.hastaTs - this.desdeTs) / 86400000;
+    return dias <= 31 ? 'day' : 'month';
   }
 
-  // ── Datos para donut: distribución de estancias del período ─────────────
+  private claveBucket(ts: number): string {
+    const d = new Date(ts);
+    if (this.granularidad === 'day') return d.toISOString().slice(0, 10);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  private etiquetaBucket(clave: string): string {
+    if (this.granularidad === 'day') {
+      const [, m, d] = clave.split('-');
+      return `${d}/${m}`;
+    }
+    const [y, m] = clave.split('-');
+    const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    return `${meses[Number(m) - 1]} ${y}`;
+  }
+
+  private get bucketsOrdenados(): string[] {
+    const claves = new Set<string>();
+    const paso = this.granularidad === 'day' ? 86400000 : 30 * 86400000;
+    let cursor = this.desdeTs;
+    while (cursor <= this.hastaTs) {
+      claves.add(this.claveBucket(cursor));
+      cursor += paso;
+    }
+    claves.add(this.claveBucket(this.hastaTs));
+    return Array.from(claves).sort();
+  }
+
+  // ── Datos: Entradas / Salidas ─────────────────────────────────────────────
+  get datosEntradasSalidas(): { labels: string[]; entradas: number[]; salidas: number[] } {
+    const buckets = this.bucketsOrdenados;
+    const entradas = buckets.map(b => this.actividadPeriodo.filter(a => a.tipo === 'entrada' && this.claveBucket(a.timestamp) === b).length);
+    const salidas  = buckets.map(b => this.actividadPeriodo.filter(a => a.tipo === 'salida'  && this.claveBucket(a.timestamp) === b).length);
+    return { labels: buckets.map(b => this.etiquetaBucket(b)), entradas, salidas };
+  }
+
+  // ── Datos: Ingresos ───────────────────────────────────────────────────────
+  get datosIngresos(): { labels: string[]; ingresos: number[] } {
+    const buckets = this.bucketsOrdenados;
+    const completados = this.pagosPeriodo.filter(p => p.estado === 'Completado');
+    const ingresos = buckets.map(b => completados.filter(p => this.claveBucket(p.timestamp) === b).reduce((s, p) => s + p.monto, 0));
+    return { labels: buckets.map(b => this.etiquetaBucket(b)), ingresos };
+  }
+
+  // ── Datos: Métodos de pago ────────────────────────────────────────────────
+  get datosMetodosPago(): { labels: string[]; data: number[] } {
+    const completados = this.pagosPeriodo.filter(p => p.estado === 'Completado');
+    return {
+      labels: ['Efectivo', 'Transferencia', 'Tarjeta'],
+      data: [
+        completados.filter(p => p.metodo === 'Efectivo').length,
+        completados.filter(p => p.metodo === 'Transferencia').length,
+        completados.filter(p => p.metodo === 'Tarjeta').length
+      ]
+    };
+  }
+
+  // ── Datos para donut de "Métricas clave": distribución de duración de estancias ──
   get distribucionEstancias(): number[] {
     const completados = this.pagosPeriodo.filter(p => p.estado === 'Completado');
     const total = completados.length;
@@ -157,7 +216,7 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.pagosPeriodo.some(p => p.estado === 'Completado');
   }
 
-  // ── Datos para barras: ocupación actual por nivel ────────────────────────
+  // ── Ocupación actual por nivel (estado en vivo, no depende del rango) ────
   get usoPorNivel(): number[] {
     return [1, 2, 3].map(n => {
       const total = this.cajones.filter(c => c.nivel === n).length;
@@ -168,22 +227,16 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   ngOnInit(): void {
-    const anio      = new Date().getFullYear();
-    const inicioAnio = new Date(anio, 0, 1).getTime();
-    const finAnio    = new Date(anio, 11, 31, 23, 59, 59).getTime();
-
     this.subs.push(
       this.fb.getCajones().subscribe(c => {
         this.cajones = c.filter(cj => cj.nivel !== 4);
         this.updateBarChart();
+        this.updateMainChart();
       }),
       this.fb.getPagos().subscribe(p => {
         this.pagos = p;
         this.updateDonutChart();
-      }),
-      this.fb.getActividadRango(inicioAnio, finAnio).subscribe(a => {
-        this.actividadAnio = a;
-        this.updateLineChart();
+        this.updateMainChart();
       }),
       this.fb.getSustentabilidad().subscribe({
         next: s => { this.sustentabilidad = s; },
@@ -192,6 +245,7 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
       this.fb.getSecuencias().subscribe(s => { this.secuencias = s; }),
       this.fb.getReportesHistorial().subscribe(h => { this.historial = h; })
     );
+    this.cargarActividad();
   }
 
   ngAfterViewInit(): void {
@@ -203,31 +257,21 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subs.forEach(s => s.unsubscribe());
-    [this.chartLine, this.chartDonut, this.chartBar].forEach(c => c?.destroy());
+    this.actividadSub?.unsubscribe();
+    [this.chartMain, this.chartDonut, this.chartBar].forEach(c => c?.destroy());
+  }
+
+  private cargarActividad(): void {
+    this.actividadSub?.unsubscribe();
+    this.actividadSub = this.fb.getActividadRango(this.desdeTs, this.hastaTs).subscribe(a => {
+      this.actividad = a;
+      this.updateMainChart();
+    });
   }
 
   // ── Charts ────────────────────────────────────────────────────────────────
   private initCharts(): void {
-    const linea = this.datosLineaMensual;
-    this.chartLine = new Chart(this.lineChartCanvas.nativeElement, {
-      type: 'line',
-      data: {
-        labels: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
-        datasets: [
-          { label: 'Entradas', data: linea.entradas, borderColor: '#C9A227', backgroundColor: 'rgba(201,162,39,0.08)', tension: 0.4, fill: true, pointRadius: 4 },
-          { label: 'Salidas',  data: linea.salidas,  borderColor: '#0b131a', backgroundColor: 'rgba(11,19,26,0.05)',    tension: 0.4, fill: true, pointRadius: 4 }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: { beginAtZero: true, grid: { color: '#eee' }, ticks: { font: { size: 10 } } },
-          x: { grid: { color: '#eee' }, ticks: { font: { size: 10 } } }
-        },
-        plugins: { legend: { labels: { font: { size: 10 }, boxWidth: 16 } } }
-      }
-    });
+    this.crearChartPrincipal();
 
     this.chartDonut = new Chart(this.donutCanvas.nativeElement, {
       type: 'doughnut',
@@ -249,12 +293,69 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  private updateLineChart(): void {
-    if (!this.chartsReady || !this.chartLine) return;
-    const d = this.datosLineaMensual;
-    this.chartLine.data.datasets[0].data = d.entradas;
-    this.chartLine.data.datasets[1].data = d.salidas;
-    this.chartLine.update();
+  private crearChartPrincipal(): void {
+    if (!this.mainChartCanvas) return;
+    if (this.chartMain) { this.chartMain.destroy(); this.chartMain = null; }
+    const canvas = this.mainChartCanvas.nativeElement;
+
+    if (this.chartTipo === 'entradas-salidas') {
+      const d = this.datosEntradasSalidas;
+      this.chartMain = new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels: d.labels,
+          datasets: [
+            { label: 'Entradas', data: d.entradas, borderColor: '#C9A227', backgroundColor: 'rgba(201,162,39,0.08)', tension: 0.4, fill: true, pointRadius: 3 },
+            { label: 'Salidas',  data: d.salidas,  borderColor: '#0b131a', backgroundColor: 'rgba(11,19,26,0.05)',    tension: 0.4, fill: true, pointRadius: 3 }
+          ]
+        },
+        options: this.opcionesLineaBarra()
+      });
+    } else if (this.chartTipo === 'ingresos') {
+      const d = this.datosIngresos;
+      this.chartMain = new Chart(canvas, {
+        type: 'bar',
+        data: { labels: d.labels, datasets: [{ label: 'Ingresos', data: d.ingresos, backgroundColor: '#C9A227', borderRadius: 4 }] },
+        options: this.opcionesLineaBarra(true)
+      });
+    } else if (this.chartTipo === 'metodos-pago') {
+      const d = this.datosMetodosPago;
+      this.chartMain = new Chart(canvas, {
+        type: 'doughnut',
+        data: { labels: d.labels, datasets: [{ data: d.data, backgroundColor: ['#C9A227', '#aaa', '#333'], borderWidth: 0 }] },
+        options: { responsive: true, maintainAspectRatio: false, cutout: '55%', plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 12 } } } }
+      });
+    } else {
+      this.chartMain = new Chart(canvas, {
+        type: 'bar',
+        data: { labels: ['Nivel 1', 'Nivel 2', 'Nivel 3'], datasets: [{ label: 'Ocupación', data: this.usoPorNivel, backgroundColor: '#C9A227', borderRadius: 4 }] },
+        options: this.opcionesLineaBarra(true, true)
+      });
+    }
+  }
+
+  private opcionesLineaBarra(esMoneda = false, esPorcentaje = false): any {
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true, grid: { color: '#eee' },
+          ticks: {
+            font: { size: 10 },
+            callback: (v: number) => esPorcentaje ? v + '%' : (esMoneda ? '$' + v : v)
+          },
+          ...(esPorcentaje ? { max: 100 } : {})
+        },
+        x: { grid: { color: '#eee' }, ticks: { font: { size: 10 } } }
+      },
+      plugins: { legend: { labels: { font: { size: 10 }, boxWidth: 16 } } }
+    };
+  }
+
+  private updateMainChart(): void {
+    if (!this.chartsReady) return;
+    this.crearChartPrincipal();
   }
 
   private updateDonutChart(): void {
@@ -269,7 +370,16 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
     this.chartBar.update();
   }
 
-  onPeriodoChange(): void { this.updateDonutChart(); }
+  onChartTipoChange(): void { this.updateMainChart(); }
+
+  onRangoChange(): void {
+    this.cargarActividad();
+    this.updateDonutChart();
+    // updateMainChart() se dispara solo cuando llegue la nueva actividad (cargarActividad)
+    // pero si la gráfica activa es de ingresos/métodos de pago (que no dependen de "actividad"),
+    // hay que refrescarla también aquí:
+    if (this.chartTipo !== 'entradas-salidas') this.updateMainChart();
+  }
 
   // ── Generar reporte ───────────────────────────────────────────────────────
   async generarReporte(): Promise<void> {
@@ -277,10 +387,14 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
     this.generando = true;
     try {
       const hoy    = new Date().toISOString().slice(0, 10);
-      const nombre = `Reporte ${this.moduloLabel} — ${this.periodoLabel} — ${hoy}`;
+      const nombre = `Reporte ${this.moduloLabel} — ${this.periodoLabel}`;
       const resumen = this.computarResumen();
 
-      const reporte: ReporteHistorial = { nombre, fecha: hoy, tipo: this.modulo, periodo: this.periodo, resumen };
+      const reporte: ReporteHistorial = {
+        nombre, fecha: hoy, tipo: this.modulo,
+        periodo: `${this.fechaInicio}_${this.fechaFin}`,
+        resumen
+      };
       await this.fb.addReporte(reporte);
 
       this.reporteVer    = reporte;
@@ -293,7 +407,9 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private computarResumen(): { label: string; valor: string }[] {
-    const items: { label: string; valor: string }[] = [];
+    const items: { label: string; valor: string }[] = [
+      { label: 'Rango de fechas', valor: this.periodoLabel }
+    ];
     const m = this.modulo;
 
     if (m === 'general' || m === 'pagos') {
