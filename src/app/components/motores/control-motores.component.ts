@@ -29,6 +29,8 @@ export class ControlMotoresComponent implements OnInit, OnDestroy {
     return !!this.robot.estado$.value?.ejecutando;
   }
 
+  modoPanel: 'lista' | 'editor' = 'lista';
+
   // Steppers
   p1Pasos = 100; p1Vel = 1000;
   p2Pasos = 100; p2Vel = 1000;
@@ -56,7 +58,7 @@ export class ControlMotoresComponent implements OnInit, OnDestroy {
   private ultimoOnline = false;
   private subs: Subscription[] = [];
 
-  constructor(private robot: MqttRobotService, private fb: FirebaseService) {}
+  constructor(private robot: MqttRobotService, private fb: FirebaseService) { }
 
   ngOnInit(): void {
     this.subs.push(
@@ -72,6 +74,22 @@ export class ControlMotoresComponent implements OnInit, OnDestroy {
         this.ultimoOnline = online;
       })
     );
+  }
+  tipoCampo(p: PasoSecuencia): 'stepper' | 'espera' | 'parar' | 'dc' {
+    if (p.tipo === 'P1' || p.tipo === 'P2') return 'stepper';
+    if (p.tipo === 'ESPERAR') return 'espera';
+    if (p.tipo === 'PARAR_DC') return 'parar';
+    return 'dc';
+  }
+
+  nuevaSecuencia(): void {
+    this.limpiarSecuencia();
+    this.modoPanel = 'editor';
+  }
+
+  volverALista(): void {
+    this.limpiarSecuencia();
+    this.modoPanel = 'lista';
   }
 
   ngOnDestroy(): void {
@@ -94,21 +112,21 @@ export class ControlMotoresComponent implements OnInit, OnDestroy {
   // ---- Control manual ----------------------------------------------
   async enviarComando(motor: 'P1' | 'P2'): Promise<void> {
     const pasos = motor === 'P1' ? this.p1Pasos : this.p2Pasos;
-    const vel   = motor === 'P1' ? Number(this.p1Vel) : Number(this.p2Vel);
+    const vel = motor === 'P1' ? Number(this.p1Vel) : Number(this.p2Vel);
     try {
-        await this.robot.comando(motor, pasos, vel);
-        this.toast(`${motor}: ${pasos} pasos`, 'ok');
+      await this.robot.comando(motor, pasos, vel);
+      this.toast(`${motor}: ${pasos} pasos`, 'ok');
     } catch (e: any) {
-        this.toast(e?.message === 'ocupado' ? 'El robot está ocupado, espera' : 'Error de comunicación', 'err');
+      this.toast(e?.message === 'ocupado' ? 'El robot está ocupado, espera' : 'Error de comunicación', 'err');
     }
   }
 
   async enviarDC(motor: string): Promise<void> {
     try {
-        await this.robot.comando(motor, Number(this.dcVel[motor]));
-        this.toast(`${motor}: velocidad ${this.dcVel[motor]}`, 'ok');
+      await this.robot.comando(motor, Number(this.dcVel[motor]));
+      this.toast(`${motor}: velocidad ${this.dcVel[motor]}`, 'ok');
     } catch (e: any) {
-        this.toast(e?.message === 'ocupado' ? 'El robot está ocupado, espera' : 'Error de comunicación', 'err');
+      this.toast(e?.message === 'ocupado' ? 'El robot está ocupado, espera' : 'Error de comunicación', 'err');
     }
   }
 
@@ -124,7 +142,7 @@ export class ControlMotoresComponent implements OnInit, OnDestroy {
 
   // ---- Constructor de secuencias: agregar directo desde cada tarjeta ----
   agregarDesdeMotor(motor: 'P1' | 'P2'): void {
-    const valor     = motor === 'P1' ? this.p1Pasos : this.p2Pasos;
+    const valor = motor === 'P1' ? this.p1Pasos : this.p2Pasos;
     const velocidad = motor === 'P1' ? Number(this.p1Vel) : Number(this.p2Vel);
     this.pasos.push({ tipo: motor, valor, velocidad });
     this.toast(`${motor} agregado a la secuencia`, 'info');
@@ -185,9 +203,10 @@ export class ControlMotoresComponent implements OnInit, OnDestroy {
       }
       this.toast(`"${nombre}" guardada en Firebase`, 'ok');
       this.limpiarSecuencia();
+      this.modoPanel = 'lista';
 
       if (this.robot.estado$.value?.online) {
-        this.robot.guardarSecuencia(nombre, pasosACopiar).catch(() => {});
+        this.robot.guardarSecuencia(nombre, pasosACopiar).catch(() => { });
       }
     } catch (e) {
       console.error('[guardar] ERROR al escribir en Firebase:', e);
@@ -199,6 +218,7 @@ export class ControlMotoresComponent implements OnInit, OnDestroy {
     this.editandoId = s.id || null;
     this.nombreSecuencia = s.nombre;
     this.pasos = JSON.parse(JSON.stringify(s.pasos || []));
+    this.modoPanel = 'editor';
     this.toast(`Editando "${s.nombre}"`, 'info');
   }
 
@@ -208,7 +228,7 @@ export class ControlMotoresComponent implements OnInit, OnDestroy {
     try {
       await this.fb.updateSecuencia(s.id, { eliminado: true });
       this.toast(`"${s.nombre}" eliminada`, 'ok');
-      if (this.robot.estado$.value?.online) this.robot.eliminarSecuencia(s.nombre).catch(() => {});
+      if (this.robot.estado$.value?.online) this.robot.eliminarSecuencia(s.nombre).catch(() => { });
     } catch {
       this.toast('Error al eliminar', 'err');
     }
