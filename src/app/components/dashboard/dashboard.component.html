@@ -24,22 +24,79 @@
     </div>
   </div>
 
-  <div class="dash-grid-bottom">
-    <div class="card-kaak">
-      <h5 style="font-weight:500;font-size:0.95rem;">Ocupación Por Hora</h5>
-      <div class="chart-fill"><canvas #lineCanvas></canvas></div>
+  <div class="dash-grid-secondary">
+    <div class="dash-stat-card">
+      <div class="label">Ingresos Hoy</div>
+      <div class="big-num" style="color:#111;">{{ formatMonto(ingresoHoy) }}</div>
+      <div class="sub">{{ pagosHoy.length }} transacciones registradas</div>
     </div>
-<div class="card-kaak card-scroll">
-      <h5>Actividad Reciente</h5>
-      <div class="card-scroll-body" style="display: flex; flex-direction: column; justify-content: flex-start;">
-        <div *ngIf="actividad.length === 0" style="text-align:center; color:#bbb; padding:1.5rem; font-size:0.85rem; margin: auto 0;">
-          Sin actividad registrada aún
+    <div class="dash-stat-card">
+      <div class="label">Ticket Promedio</div>
+      <div class="big-num" style="color:#111;">{{ formatMonto(ticketPromedioHoy) }}</div>
+      <div class="sub">por vehículo, hoy</div>
+    </div>
+    <div class="dash-stat-card">
+      <div class="label">Energía Solar</div>
+      <div class="big-num"><span>{{ sustentabilidad?.porcentajeSolar || 0 }}%</span></div>
+      <div class="progress-track"><div class="progress-fill" [style.width.%]="sustentabilidad?.porcentajeSolar || 0"></div></div>
+    </div>
+    <div class="dash-stat-card">
+      <div class="label">Nivel de Cisterna</div>
+      <div class="big-num" [style.color]="(sustentabilidad?.nivelTanque || 0) <= 20 ? '#d03b3b' : '#111'">{{ sustentabilidad?.nivelTanque || 0 }}%</div>
+      <div class="progress-track"><div class="progress-fill blue" [style.width.%]="sustentabilidad?.nivelTanque || 0"></div></div>
+    </div>
+  </div>
+
+  <div class="dash-scroll">
+    <div class="dash-grid-bottom">
+      <div class="card-kaak">
+        <h5 style="font-weight:500;font-size:0.95rem;">Ocupación Por Hora</h5>
+        <div class="chart-fill"><canvas #lineCanvas></canvas></div>
+      </div>
+      <div class="card-kaak card-scroll">
+        <h5>Actividad Reciente</h5>
+        <div class="card-scroll-body" style="display: flex; flex-direction: column; justify-content: flex-start;">
+          <div *ngIf="actividad.length === 0" style="text-align:center; color:#bbb; padding:1.5rem; font-size:0.85rem; margin: auto 0;">
+            Sin actividad registrada aún
+          </div>
+          <div class="actividad-item" *ngFor="let item of actividad">
+            <img class="act-icon" [src]="getActIcon(item.tipo)" alt=""/>
+            <div class="act-info"><strong>{{ getActLabel(item.tipo) }}</strong><span>{{ item.placa }}</span></div>
+            <span class="act-hora">{{ item.hora }}</span>
+          </div>
         </div>
-        <div class="actividad-item" *ngFor="let item of actividad">
-          <img class="act-icon" [src]="getActIcon(item.tipo)" alt=""/>
-          <div class="act-info"><strong>{{ getActLabel(item.tipo) }}</strong><span>{{ item.placa }}</span></div>
-          <span class="act-hora">{{ item.hora }}</span>
+      </div>
+    </div>
+
+    <div class="dash-grid-charts">
+      <div class="card-kaak">
+        <h5>Ingresos Últimos 7 Días</h5>
+        <div class="chart-fill"><canvas #ingresosCanvas></canvas></div>
+      </div>
+      <div class="card-kaak">
+        <h5>Ocupación por Nivel</h5>
+        <div class="chart-fill"><canvas #nivelCanvas></canvas></div>
+      </div>
+      <div class="card-kaak">
+        <h5>Métodos de Pago</h5>
+        <div class="chart-fill"><canvas #metodosCanvas></canvas></div>
+      </div>
+    </div>
+
+    <div class="dash-grid-insights">
+      <div class="card-kaak card-scroll">
+        <h5>Interpretación de Resultados</h5>
+        <div class="card-scroll-body">
+          <div *ngIf="insights.length === 0" style="text-align:center; color:#bbb; padding:1.5rem; font-size:0.85rem;">
+            Aún no hay suficientes datos para generar interpretaciones.
+          </div>
+          <div class="insight-item" *ngFor="let ins of insights">
+            <span class="insight-icon" [ngClass]="ins.tipo">{{ ins.tipo === 'good' ? '✓' : ins.tipo === 'info' ? 'i' : '!' }}</span>
+            <span>{{ ins.texto }}</span>
+          </div>
         </div>
       </div>
     </div>
   </div>
+
+</div>
