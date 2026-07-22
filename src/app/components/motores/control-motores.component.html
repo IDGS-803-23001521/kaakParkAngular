@@ -58,16 +58,31 @@
             </div>
           </div>
 
-          <div class="motor-card" *ngFor="let m of motoresDc">
+          <div class="motor-card">
             <div class="motor-card-head">
-              <span class="motor-badge motor-badge-dc">{{ m }}</span>
-              <div><strong>Motor {{ m.slice(1) }}</strong><small>TB6612 · DC</small></div>
+              <span class="motor-badge motor-badge-stepper">P3</span>
+              <div><strong>Paso 3</strong><small>NEMA17 · Stepper</small></div>
             </div>
-            <div class="motor-slider-label"><span>Velocidad</span><span>{{ dcVel[m] }}</span></div>
-            <input class="motor-range" type="range" min="-255" max="255" step="5" [(ngModel)]="dcVel[m]" />
+            <input class="filtro-input" type="number" [(ngModel)]="p3Pasos" placeholder="pasos (+/-)" />
+            <div class="motor-slider-label"><span>Velocidad (µs)</span><span>{{ p3Vel }}</span></div>
+            <input class="motor-range" type="range" min="200" max="5000" step="100" [(ngModel)]="p3Vel" />
             <div class="motor-card-actions">
-              <button class="btn-guardar" [disabled]="ocupado" (click)="enviarDC(m)">▶ Aplicar</button>
-              <button class="btn-icon motor-add-mini" title="Agregar a la secuencia" (click)="agregarDC(m)">+</button>
+              <button class="btn-guardar" [disabled]="ocupado" (click)="enviarComando('P3')">▶ Mover</button>
+              <button class="btn-icon motor-add-mini" title="Agregar a la secuencia" (click)="agregarDesdeMotor('P3')">+</button>
+            </div>
+          </div>
+
+          <div class="motor-card">
+            <div class="motor-card-head">
+              <span class="motor-badge motor-badge-stepper">P4</span>
+              <div><strong>Paso 4</strong><small>NEMA17 · Stepper</small></div>
+            </div>
+            <input class="filtro-input" type="number" [(ngModel)]="p4Pasos" placeholder="pasos (+/-)" />
+            <div class="motor-slider-label"><span>Velocidad (µs)</span><span>{{ p4Vel }}</span></div>
+            <input class="motor-range" type="range" min="200" max="5000" step="100" [(ngModel)]="p4Vel" />
+            <div class="motor-card-actions">
+              <button class="btn-guardar" [disabled]="ocupado" (click)="enviarComando('P4')">▶ Mover</button>
+              <button class="btn-icon motor-add-mini" title="Agregar a la secuencia" (click)="agregarDesdeMotor('P4')">+</button>
             </div>
           </div>
 
@@ -115,8 +130,6 @@
             <input class="filtro-input" type="number" [(ngModel)]="esperarMs" />
             <span class="motor-add-unidad">ms</span>
             <button class="btn-icon motor-add-mini" title="Agregar espera" (click)="agregarEsperar()">+</button>
-            <span class="motor-especiales-sep"></span>
-            <button class="btn-cancelar" (click)="agregarPararDc()">+ Parar DC</button>
           </div>
 
           <div class="card-scroll-body">
@@ -135,13 +148,6 @@
                   <div class="motor-step-fields" *ngSwitchCase="'espera'">
                     <input class="filtro-input motor-step-num-input" type="number" [(ngModel)]="p.valor" />
                     <span class="motor-step-unit">ms</span>
-                  </div>
-                  <div class="motor-step-fields" *ngSwitchCase="'parar'">
-                    <span class="motor-step-unit">detiene todos los motores DC</span>
-                  </div>
-                  <div class="motor-step-fields" *ngSwitchDefault>
-                    <input class="filtro-input motor-step-num-input" type="number" [(ngModel)]="p.valor" />
-                    <span class="motor-step-unit">velocidad</span>
                   </div>
                 </ng-container>
 

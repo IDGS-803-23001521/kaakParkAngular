@@ -4,6 +4,8 @@ import { map } from 'rxjs/operators';
 import { FirebaseService } from '../../services/firebase.service';
 import { MqttRobotService, PasoSecuencia, Secuencia } from '../../services/mqtt-robot.service';
 
+type Stepper = 'P1' | 'P2' | 'P3' | 'P4';
+
 @Component({
   standalone: false,
   selector: 'app-control-motores',
@@ -31,13 +33,11 @@ export class ControlMotoresComponent implements OnInit, OnDestroy {
 
   modoPanel: 'lista' | 'editor' = 'lista';
 
-  // Steppers
+  // Steppers (4 controladores DRV8825)
   p1Pasos = 100; p1Vel = 1000;
   p2Pasos = 100; p2Vel = 1000;
-
-  // Motores DC
-  dcVel: Record<string, number> = { M1: 0, M2: 0, M3: 0, M4: 0 };
-  motoresDc = ['M1', 'M2', 'M3', 'M4'];
+  p3Pasos = 100; p3Vel = 1000;
+  p4Pasos = 100; p4Vel = 1000;
 
   // Acciones especiales (no pertenecen a un motor en particular)
   esperarMs = 1000;
@@ -75,11 +75,9 @@ export class ControlMotoresComponent implements OnInit, OnDestroy {
       })
     );
   }
-  tipoCampo(p: PasoSecuencia): 'stepper' | 'espera' | 'parar' | 'dc' {
-    if (p.tipo === 'P1' || p.tipo === 'P2') return 'stepper';
-    if (p.tipo === 'ESPERAR') return 'espera';
-    if (p.tipo === 'PARAR_DC') return 'parar';
-    return 'dc';
+
+  tipoCampo(p: PasoSecuencia): 'stepper' | 'espera' {
+    return p.tipo === 'ESPERAR' ? 'espera' : 'stepper';
   }
 
   nuevaSecuencia(): void {
@@ -110,9 +108,17 @@ export class ControlMotoresComponent implements OnInit, OnDestroy {
   }
 
   // ---- Control manual ----------------------------------------------
-  async enviarComando(motor: 'P1' | 'P2'): Promise<void> {
-    const pasos = motor === 'P1' ? this.p1Pasos : this.p2Pasos;
-    const vel = motor === 'P1' ? Number(this.p1Vel) : Number(this.p2Vel);
+  private valoresStepper(motor: Stepper): { pasos: number; vel: number } {
+    switch (motor) {
+      case 'P1': return { pasos: this.p1Pasos, vel: Number(this.p1Vel) };
+      case 'P2': return { pasos: this.p2Pasos, vel: Number(this.p2Vel) };
+      case 'P3': return { pasos: this.p3Pasos, vel: Number(this.p3Vel) };
+      case 'P4': return { pasos: this.p4Pasos, vel: Number(this.p4Vel) };
+    }
+  }
+
+  async enviarComando(motor: Stepper): Promise<void> {
+    const { pasos, vel } = this.valoresStepper(motor);
     try {
       await this.robot.comando(motor, pasos, vel);
       this.toast(`${motor}: ${pasos} pasos`, 'ok');
@@ -121,46 +127,25 @@ export class ControlMotoresComponent implements OnInit, OnDestroy {
     }
   }
 
-  async enviarDC(motor: string): Promise<void> {
-    try {
-      await this.robot.comando(motor, Number(this.dcVel[motor]));
-      this.toast(`${motor}: velocidad ${this.dcVel[motor]}`, 'ok');
-    } catch (e: any) {
-      this.toast(e?.message === 'ocupado' ? 'El robot está ocupado, espera' : 'Error de comunicación', 'err');
-    }
-  }
-
   async pararTodo(): Promise<void> {
     try {
       await this.robot.parar();
-      this.motoresDc.forEach(m => (this.dcVel[m] = 0));
-      this.toast('Motores DC detenidos', 'info');
+      this.toast('Comando parar enviado', 'info');
     } catch {
       this.toast('Error de comunicación', 'err');
     }
   }
 
   // ---- Constructor de secuencias: agregar directo desde cada tarjeta ----
-  agregarDesdeMotor(motor: 'P1' | 'P2'): void {
-    const valor = motor === 'P1' ? this.p1Pasos : this.p2Pasos;
-    const velocidad = motor === 'P1' ? Number(this.p1Vel) : Number(this.p2Vel);
-    this.pasos.push({ tipo: motor, valor, velocidad });
-    this.toast(`${motor} agregado a la secuencia`, 'info');
-  }
-
-  agregarDC(motor: string): void {
-    this.pasos.push({ tipo: motor, valor: Number(this.dcVel[motor]) });
+  agregarDesdeMotor(motor: Stepper): void {
+    const { pasos, vel } = this.valoresStepper(motor);
+    this.pasos.push({ tipo: motor, valor: pasos, velocidad: vel });
     this.toast(`${motor} agregado a la secuencia`, 'info');
   }
 
   agregarEsperar(): void {
     this.pasos.push({ tipo: 'ESPERAR', valor: Number(this.esperarMs) });
     this.toast('Espera agregada', 'info');
-  }
-
-  agregarPararDc(): void {
-    this.pasos.push({ tipo: 'PARAR_DC', valor: 0 });
-    this.toast('Parar DC agregado', 'info');
   }
 
   borrarPaso(i: number): void {
@@ -180,10 +165,8 @@ export class ControlMotoresComponent implements OnInit, OnDestroy {
   }
 
   descripcionPaso(p: PasoSecuencia): string {
-    if (p.tipo === 'PARAR_DC') return 'Parar motores DC';
-    if (p.tipo.startsWith('P')) return `${p.valor} pasos (${p.velocidad}µs)`;
     if (p.tipo === 'ESPERAR') return `${p.valor} ms`;
-    return `velocidad ${p.valor}`;
+    return `${p.valor} pasos (${p.velocidad}µs)`;
   }
 
   // ---- Guardar: siempre en Firebase; en el ESP32 solo si está en línea ----

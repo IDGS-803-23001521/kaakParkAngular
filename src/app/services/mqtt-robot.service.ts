@@ -8,7 +8,6 @@ declare const mqtt: any;
 export interface EstadoRobot {
   online: boolean;
   ejecutando: boolean;
-  dc: number[];
 }
 
 export interface PasoSecuencia {
@@ -39,7 +38,7 @@ export class MqttRobotService {
   private client: any = null;
   private pendientes = new Map<string, { resolve: (v: any) => void; reject: (e: any) => void; timer: any }>();
 
-  readonly estado$ = new BehaviorSubject<EstadoRobot>({ online: false, ejecutando: false, dc: [0, 0, 0, 0] });
+  readonly estado$ = new BehaviorSubject<EstadoRobot>({ online: false, ejecutando: false });
   readonly conexion$ = new BehaviorSubject<EstadoConexion>('desconectado');
 
   constructor() {
@@ -73,8 +72,7 @@ export class MqttRobotService {
       if (topic === TOPIC_ESTADO) {
         this.estado$.next({
           online: !!data.online,
-          ejecutando: !!data.ejecutando,
-          dc: data.dc || [0, 0, 0, 0]
+          ejecutando: !!data.ejecutando
         });
         return;
       }
