@@ -1,93 +1,153 @@
 <app-navbar></app-navbar>
 <div class="page-bg page-bg-gears">
-  <div class="sust-grid">
+  <div class="sust-container">
 
-    <div class="sust-left">
-      <div class="card-kaak">
-        <h5>Panel de Sustentabilidad en Tiempo Real</h5>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:center;">
-          <div>
-            <div style="font-size:0.82rem;color:#555;margin-bottom:10px;">Consumo de Agua Pluvial</div>
-            <div style="display:flex;align-items:center;gap:1rem;">
-              <canvas #donutAguaCanvas width="110" height="110" style="flex-shrink:0;"></canvas>
-              <div style="font-size:0.78rem;color:#555;">
-                <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;"><span style="width:10px;height:10px;border-radius:50%;background:#0c141a;display:inline-block;"></span> Grises</div>
-                <div style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:50%;background:#ccc;display:inline-block;"></span> Disponible</div>
-              </div>
-            </div>
-          </div>
-          <div>
-            <div style="font-size:0.82rem;color:#555;margin-bottom:10px;">Generación Solar</div>
-            <div style="display:flex;align-items:center;gap:1rem;">
-              <canvas #donutSolarCanvas width="110" height="110" style="flex-shrink:0;"></canvas>
-              <div style="font-size:0.78rem;color:#555;">
-                <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;"><span style="width:10px;height:10px;border-radius:50%;background:#C9A227;display:inline-block;"></span> Solar</div>
-                <div style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:50%;background:#ccc;display:inline-block;"></span> Disponible</div>
-              </div>
-            </div>
-          </div>
+    <!-- ── 1. CINTA DE METRICAS PRINCIPALES (4 TARJETAS KPI) ───────────────── -->
+    <div class="sust-kpi-grid">
+      <!-- KPI 1: Nivel de Cisterna -->
+      <div class="card-kaak sust-kpi-card">
+        <div class="sust-kpi-header">
+          <span class="sust-kpi-title">Nivel de Cisterna</span>
         </div>
-
-        <div class="estado-sistema" style="margin-top:1.5rem;">
-          <div style="font-size:0.82rem;font-weight:700;color:#333;margin-bottom:6px;">Estado del Sistema</div>
-          <div class="estado-row">
-            <span>Bomba de Agua</span>
-            <div class="estado-btns">
-              <button class="btn-on-off" [class.btn-on]="data.bombaAgua" [class.btn-off]="!data.bombaAgua" (click)="toggleBomba(true)">ON</button>
-              <button class="btn-on-off" [style.background]="data.bombaAgua ? '#555' : '#E53935'" style="color:#fff;" (click)="toggleBomba(false)">OFF</button>
-              <span style="font-weight:700;" [style.color]="data.bombaAgua ? '#C9A227' : '#E53935'">{{data.bombaAgua ? 'ON' : 'OFF'}}</span>
-            </div>
-          </div>
-          <div class="estado-row">
-            <span>Energía Generada</span>
-            <strong style="color:#C9A227;">{{data.energiaGeneradaKwh}} kWh</strong>
-          </div>
-          <div class="estado-row">
-            <span>Nivel del Tanque</span>
-            <strong style="color:#2D9CDB;">{{data.nivelTanque}}%</strong>
-          </div>
-        </div>
-
-        <div style="margin-top:1rem;" *ngIf="data.alertas.length">
-          <div style="font-size:0.82rem;font-weight:700;color:#E53935;margin-bottom:6px;">⚠ Alertas</div>
-          <div *ngFor="let alerta of data.alertas"
-               style="background:#fff3e0;border-left:3px solid #FFA726;border-radius:4px;padding:6px 10px;margin-bottom:6px;font-size:0.8rem;color:#bf6a02;">
-            {{alerta}}
-          </div>
+        <div class="sust-kpi-val blue">{{ data.nivelTanque }}%</div>
+        <div class="sust-kpi-sub">{{ nivelTanqueLitros }} L / {{ CISTERNA_CAPACIDAD_LITROS }} L</div>
+        <div class="sust-kpi-bar-bg">
+          <div class="sust-kpi-bar-fill blue" [style.width.%]="data.nivelTanque"></div>
         </div>
       </div>
 
-      <div class="card-kaak" style="flex:1;">
-        <h5>Tendencias de Generación Solar (Semana Actual)</h5>
-        <div class="chart-fill"><canvas #lineSolarCanvas></canvas></div>
+      <!-- KPI 2: Generación Solar -->
+      <div class="card-kaak sust-kpi-card">
+        <div class="sust-kpi-header">
+          <span class="sust-kpi-title">Energía Generada</span>
+        </div>
+        <div class="sust-kpi-val gold">{{ data.energiaGeneradaKwh }} <span class="unit">kWh</span></div>
+        <div class="sust-kpi-sub">Aporte Solar: {{ data.porcentajeSolar }}% de la red</div>
+        <div class="sust-kpi-bar-bg">
+          <div class="sust-kpi-bar-fill gold" [style.width.%]="data.porcentajeSolar"></div>
+        </div>
+      </div>
+
+      <!-- KPI 3: Agua Captada -->
+      <div class="card-kaak sust-kpi-card">
+        <div class="sust-kpi-header">
+          <span class="sust-kpi-title">Agua Captada</span>
+        </div>
+        <div class="sust-kpi-val dark">{{ data.aguaCaptadaLitros }} <span class="unit">L</span></div>
+        <div class="sust-kpi-sub">Usada para riego: {{ data.aguaUsadaRiego }} L</div>
+        <div class="sust-kpi-bar-bg">
+          <div class="sust-kpi-bar-fill green" [style.width.%]="aguaPluvialPorcentaje"></div>
+        </div>
+      </div>
+
+      <!-- KPI 4: Control de Bomba -->
+      <div class="card-kaak sust-kpi-card">
+        <div class="sust-kpi-header">
+          <span class="sust-kpi-title">Bomba de Agua</span>
+        </div>
+        <div class="sust-kpi-val" [class.gold]="data.bombaAgua" [class.danger]="!data.bombaAgua">
+          {{ data.bombaAgua ? 'ENCENDIDA' : 'APAGADA' }}
+        </div>
+        <div class="sust-kpi-actions">
+          <button class="sust-btn-switch" [class.active-on]="data.bombaAgua" (click)="toggleBomba(true)">ON</button>
+          <button class="sust-btn-switch" [class.active-off]="!data.bombaAgua" (click)="toggleBomba(false)">OFF</button>
+        </div>
       </div>
     </div>
 
-    <div class="sust-right">
-      <div class="card-kaak">
-        <h5>Porcentaje de Llenado de la Cisterna</h5>
-        <div style="height:170px;"><canvas #barCisternaCanvas></canvas></div>
-        <div style="text-align:center;margin-top:0.75rem;font-size:0.85rem;color:#444;">
-          <strong style="color:#2D9CDB;font-size:1.1rem;">{{ data.nivelTanque }}%</strong>
-          <span style="color:#888;"> — {{ nivelTanqueLitros }} L de {{ CISTERNA_CAPACIDAD_LITROS }} L</span>
+    <!-- ── 2. SECCIONES TEMÁTICAS (2 Columnas Simétricas) ───────────────── -->
+    <div class="sust-body-grid">
+
+      <!-- COLUMNA IZQUIERDA: ENERGÍA SOLAR Y RENDIMIENTO -->
+      <div class="sust-col">
+        <div class="card-kaak sust-chart-card">
+          <div class="sust-card-head">
+            <h5>Generación y Ahorro Solar</h5>
+            <span class="sust-badge-gold">{{ data.porcentajeSolar }}% Fotovoltaica</span>
+          </div>
+
+          <div class="sust-donut-section">
+            <div class="sust-donut-box">
+              <canvas #donutSolarCanvas width="110" height="110"></canvas>
+            </div>
+            <div class="sust-legend-list">
+              <div class="sust-legend-item">
+                <span class="sust-dot gold"></span>
+                <span class="lbl">Energía Solar</span>
+                <strong class="val">{{ data.porcentajeSolar }}%</strong>
+              </div>
+              <div class="sust-legend-item">
+                <span class="sust-dot gray"></span>
+                <span class="lbl">Red Eléctrica</span>
+                <strong class="val">{{ 100 - data.porcentajeSolar }}%</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="sust-chart-title">Tendencias de Generación (Semana Actual)</div>
+          <div class="sust-line-container">
+            <canvas #lineSolarCanvas></canvas>
+          </div>
         </div>
       </div>
 
-      <div class="card-kaak" style="flex: 1;">
-        <h5>Resumen de Agua Pluvial</h5>
-        <div style="display:flex;flex-direction:column;justify-content:space-evenly;gap:8px;flex:1;">
-          <div style="display:flex;justify-content:space-between;align-items:center;background:#fffef0;border-radius:8px;padding:10px 14px;">
-            <span style="font-size:0.85rem;color:#333;">Agua Captada</span>
-            <strong style="color:#0c141a;">{{data.aguaCaptadaLitros}} L</strong>
+      <!-- COLUMNA DERECHA: GESTIÓN HÍDRICA Y CISTERNA PLUVIAL -->
+      <div class="sust-col">
+        <div class="card-kaak sust-chart-card">
+          <div class="sust-card-head">
+            <h5>Sistema Hídrico y Cisterna Pluvial</h5>
+            <span class="sust-badge-blue">{{ data.nivelTanque }}% Capacidad</span>
           </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;background:#fffef0;border-radius:8px;padding:10px 14px;">
-            <span style="font-size:0.85rem;color:#333;">Usada para Riego</span>
-            <strong style="color:#0c141a;">{{data.aguaUsadaRiego}} L</strong>
+
+          <div class="sust-donut-section">
+            <div class="sust-donut-box">
+              <canvas #donutAguaCanvas width="110" height="110"></canvas>
+            </div>
+            <div class="sust-legend-list">
+              <div class="sust-legend-item">
+                <span class="sust-dot dark"></span>
+                <span class="lbl">Reutilizada para Riego</span>
+                <strong class="val">{{ data.aguaUsadaRiego }} L</strong>
+              </div>
+              <div class="sust-legend-item">
+                <span class="sust-dot gray"></span>
+                <span class="lbl">Disponible en Cisterna</span>
+                <strong class="val">{{ aguaDisponibleLitros }} L</strong>
+              </div>
+            </div>
           </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;background:#fffef0;border-radius:8px;padding:10px 14px;">
-            <span style="font-size:0.85rem;color:#333;">Disponible</span>
-            <strong style="color:#0c141a;">{{data.aguaCaptadaLitros - data.aguaUsadaRiego}} L</strong>
+
+          <div class="sust-chart-title">Nivel de Llenado de Cisterna</div>
+          <div class="sust-bar-container">
+            <div class="sust-bar-chart-box">
+              <canvas #barCisternaCanvas></canvas>
+            </div>
+            <div class="sust-stat-cards-mini">
+              <div class="sust-mini-stat">
+                <span>Agua Captada</span>
+                <strong>{{ data.aguaCaptadaLitros }} L</strong>
+              </div>
+              <div class="sust-mini-stat">
+                <span>Usada Riego</span>
+                <strong>{{ data.aguaUsadaRiego }} L</strong>
+              </div>
+              <div class="sust-mini-stat">
+                <span>Disponible</span>
+                <strong>{{ aguaDisponibleLitros }} L</strong>
+              </div>
+            </div>
           </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── 3. ALERTAS DEL SISTEMA ───────────────────────────────────────── -->
+    <div class="card-kaak sust-alertas-card" *ngIf="data.alertas && data.alertas.length > 0">
+      <div class="sust-alertas-title">Alertas del Sistema de Sustentabilidad</div>
+      <div class="sust-alertas-list">
+        <div *ngFor="let alerta of data.alertas" class="sust-alerta-item">
+          {{ alerta }}
         </div>
       </div>
     </div>

@@ -2,41 +2,59 @@
 <div class="page-bg page-bg-gears">
   <div class="motores-wrap">
 
-    <!-- Estado de conexión -->
+    <!-- ── BARRA SUPERIOR DE CONEXION Y EMERGENCIA ────────────────────────── -->
     <div class="card-kaak motor-conn-card">
       <div class="motor-conn-row">
-        <span class="motor-status-dot" [class.online]="(conexion$ | async) === 'conectado'"
-          [class.error]="(conexion$ | async) === 'error'"></span>
-        <h5>Control de motores</h5>
-        <span class="motor-conn-label">{{ conexion$ | async }}</span>
-        <input class="filtro-input motor-broker-input" [(ngModel)]="brokerUrl" placeholder="ws://192.168.1.10:9001" />
-        <button class="btn-guardar" (click)="conectar()">Conectar</button>
+        <div class="motor-conn-info">
+          <span class="motor-status-dot"
+            [class.online]="(conexion$ | async) === 'conectado'"
+            [class.error]="(conexion$ | async) === 'error'"></span>
+          <h5>Control de Motores</h5>
+          <span class="motor-conn-label"
+            [class.online]="(conexion$ | async) === 'conectado'"
+            [class.error]="(conexion$ | async) === 'error'">
+            {{ (conexion$ | async) === 'conectado' ? 'En línea' : ((conexion$ | async) === 'error' ? 'Error' : 'Desconectado') }}
+          </span>
+        </div>
+
+        <div class="motor-conn-actions">
+          <input class="filtro-input motor-broker-input" [(ngModel)]="brokerUrl" placeholder="ws://192.168.1.10:9001" />
+          <button class="btn-guardar motor-btn-conectar" (click)="conectar()">Conectar</button>
+          <button class="btn-eliminar-confirm motor-stop-all-inline" (click)="pararTodo()">PARAR TODO</button>
+        </div>
       </div>
+
       <div class="motor-exec-banner" *ngIf="$any(estado$ | async)?.ejecutando">
-        <span class="motor-spin">⟳</span> Ejecutando secuencia…
+        <span class="motor-spin">⟳</span> Ejecutando secuencia en tiempo real…
       </div>
     </div>
 
+    <!-- ── CONTENIDO PRINCIPAL: CONTROL MANUAL Y SECUENCIAS ──────────────── -->
     <div class="motor-layout">
 
-      <!-- Panel izquierdo: control manual, TODO visible sin scroll -->
+      <!-- Panel izquierdo: control manual -->
       <div class="card-kaak motor-panel-left-fixed">
         <div class="motor-panel-left-head">
-          <h5>Control manual</h5>
-        </div>
-        <div class="motor-panel-left-head">
-          <button class="btn-eliminar-confirm motor-stop-all-inline" (click)="pararTodo()">PARAR TODO</button>
+          <h5>Control Manual de Motores</h5>
+          <span class="motor-panel-sub">Ajusta posiciones y velocidades en vivo</span>
         </div>
 
         <div class="motor-grid-fixed">
 
+          <!-- Motor P1 -->
           <div class="motor-card">
             <div class="motor-card-head">
               <span class="motor-badge motor-badge-stepper">P1</span>
-              <div><strong>Paso 1</strong><small>NEMA17 · Stepper</small></div>
+              <div>
+                <strong>Paso 1</strong>
+                <small>NEMA17 · Stepper</small>
+              </div>
+              <span class="motor-dir-tag" [class.forward]="p1Pasos >= 0" [class.reverse]="p1Pasos < 0">
+                {{ p1Pasos >= 0 ? '▲ Avanzar' : '▼ Retroceder' }}
+              </span>
             </div>
             <input class="filtro-input" type="number" [(ngModel)]="p1Pasos" placeholder="pasos (+/-)" />
-            <div class="motor-slider-label"><span>Velocidad (µs)</span><span>{{ p1Vel }}</span></div>
+            <div class="motor-slider-label"><span>Velocidad</span><strong>{{ p1Vel }} µs</strong></div>
             <input class="motor-range" type="range" min="200" max="5000" step="100" [(ngModel)]="p1Vel" />
             <div class="motor-card-actions">
               <button class="btn-guardar" [disabled]="ocupado" (click)="enviarComando('P1')">▶ Mover</button>
@@ -44,13 +62,20 @@
             </div>
           </div>
 
+          <!-- Motor P2 -->
           <div class="motor-card">
             <div class="motor-card-head">
               <span class="motor-badge motor-badge-stepper">P2</span>
-              <div><strong>Paso 2</strong><small>NEMA17 · Stepper</small></div>
+              <div>
+                <strong>Paso 2</strong>
+                <small>NEMA17 · Stepper</small>
+              </div>
+              <span class="motor-dir-tag" [class.forward]="p2Pasos >= 0" [class.reverse]="p2Pasos < 0">
+                {{ p2Pasos >= 0 ? '▲ Avanzar' : '▼ Retroceder' }}
+              </span>
             </div>
             <input class="filtro-input" type="number" [(ngModel)]="p2Pasos" placeholder="pasos (+/-)" />
-            <div class="motor-slider-label"><span>Velocidad (µs)</span><span>{{ p2Vel }}</span></div>
+            <div class="motor-slider-label"><span>Velocidad</span><strong>{{ p2Vel }} µs</strong></div>
             <input class="motor-range" type="range" min="200" max="5000" step="100" [(ngModel)]="p2Vel" />
             <div class="motor-card-actions">
               <button class="btn-guardar" [disabled]="ocupado" (click)="enviarComando('P2')">▶ Mover</button>
@@ -58,12 +83,22 @@
             </div>
           </div>
 
+          <!-- Motores DC (M1 - M4) -->
           <div class="motor-card" *ngFor="let m of motoresDc">
             <div class="motor-card-head">
               <span class="motor-badge motor-badge-dc">{{ m }}</span>
-              <div><strong>Motor {{ m.slice(1) }}</strong><small>TB6612 · DC</small></div>
+              <div>
+                <strong>Motor {{ m.slice(1) }}</strong>
+                <small>TB6612 · DC</small>
+              </div>
+              <span class="motor-dir-tag"
+                [class.forward]="dcVel[m] > 0"
+                [class.reverse]="dcVel[m] < 0"
+                [class.stopped]="dcVel[m] === 0">
+                {{ dcVel[m] > 0 ? '▶ Avance' : (dcVel[m] < 0 ? '◀ Reversa' : '⏹ Parado') }}
+              </span>
             </div>
-            <div class="motor-slider-label"><span>Velocidad</span><span>{{ dcVel[m] }}</span></div>
+            <div class="motor-slider-label"><span>Velocidad</span><strong>{{ dcVel[m] }}</strong></div>
             <input class="motor-range" type="range" min="-255" max="255" step="5" [(ngModel)]="dcVel[m]" />
             <div class="motor-card-actions">
               <button class="btn-guardar" [disabled]="ocupado" (click)="enviarDC(m)">▶ Aplicar</button>
@@ -74,25 +109,22 @@
         </div>
       </div>
 
-      <!-- Panel derecho: mismo div, cambia entre LISTA y EDITOR -->
+      <!-- Panel derecho: Secuencias -->
       <div class="card-kaak motor-panel-right card-scroll">
 
-        <div class="motor-panel-toggle" *ngIf="modoPanel === 'lista'">
-          <h5>Secuencias guardadas</h5>
+        <div class="motor-panel-toggle-row" *ngIf="modoPanel === 'lista'">
+          <h5>Secuencias Guardadas</h5>
+          <button class="btn-guardar motor-nueva-btn" (click)="nuevaSecuencia()">+ Nueva Secuencia</button>
         </div>
-        <div class="motor-panel-toggle" *ngIf="modoPanel === 'lista'">
-          <button class="btn-guardar motor-nueva-btn" (click)="nuevaSecuencia()">+ Nueva secuencia</button>
-        </div>
-        <div class="motor-panel-toggle" *ngIf="modoPanel === 'editor'">
-          <h5>{{ editandoId ? 'Editar secuencia' : 'Nueva secuencia' }}</h5>
-        </div>
-        <div class="motor-panel-toggle" *ngIf="modoPanel === 'editor'">
-          <button class="btn-cancelar motor-volver-btn" (click)="volverALista()">← Volver a la lista</button>
+
+        <div class="motor-panel-toggle-row" *ngIf="modoPanel === 'editor'">
+          <h5>{{ editandoId ? 'Editar Secuencia' : 'Nueva Secuencia' }}</h5>
+          <button class="btn-cancelar motor-volver-btn" (click)="volverALista()">← Volver a la Lista</button>
         </div>
 
         <!-- VISTA LISTA -->
         <div class="card-scroll-body" *ngIf="modoPanel === 'lista'">
-          <div *ngIf="cargandoSecuencias" class="empty-msg">Cargando…</div>
+          <div *ngIf="cargandoSecuencias" class="empty-msg">Cargando secuencias…</div>
           <div *ngIf="!cargandoSecuencias && secuenciasFirebase.length === 0" class="empty-msg">
             Sin secuencias guardadas todavía
           </div>
@@ -101,7 +133,7 @@
               <div class="motor-seq-name">{{ s.nombre }}</div>
               <div class="motor-seq-count">{{ s.pasos.length }} paso{{ s.pasos.length !== 1 ? 's' : '' }}</div>
             </div>
-            <button class="btn-icon" title="Ejecutar" [disabled]="ocupado" (click)="ejecutarSecuencia(s)">▶</button>
+            <button class="btn-icon motor-btn-exec" title="Ejecutar" [disabled]="ocupado" (click)="ejecutarSecuencia(s)">▶</button>
             <button class="btn-icon" title="Editar" (click)="editarSecuencia(s)">✏️</button>
             <button class="btn-icon btn-icon-eliminar" title="Eliminar" (click)="eliminarSecuencia(s)">🗑</button>
           </div>
@@ -112,11 +144,11 @@
 
           <div class="motor-especiales-row" style="flex-shrink:0;">
             <span class="motor-especiales-label">Esperar</span>
-            <input class="filtro-input" type="number" [(ngModel)]="esperarMs" />
+            <input class="filtro-input motor-espera-input" type="number" [(ngModel)]="esperarMs" />
             <span class="motor-add-unidad">ms</span>
             <button class="btn-icon motor-add-mini" title="Agregar espera" (click)="agregarEsperar()">+</button>
             <span class="motor-especiales-sep"></span>
-            <button class="btn-cancelar" (click)="agregarPararDc()">+ Parar DC</button>
+            <button class="btn-cancelar motor-btn-parar-dc" (click)="agregarPararDc()">+ Parar DC</button>
           </div>
 
           <div class="card-scroll-body">

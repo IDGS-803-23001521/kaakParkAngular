@@ -41,6 +41,10 @@ export class SustentabilidadComponent implements OnInit, AfterViewInit, OnDestro
     return Math.round((this.data.nivelTanque / 100) * this.CISTERNA_CAPACIDAD_LITROS * 100) / 100;
   }
 
+  get aguaDisponibleLitros(): number {
+    return Math.max(0, this.data.aguaCaptadaLitros - this.data.aguaUsadaRiego);
+  }
+
   async ngOnInit(): Promise<void> {
     await this.fb.seedSustentabilidadIfEmpty();
     const sub = this.fb.getSustentabilidad().subscribe(d => {

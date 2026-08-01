@@ -30,7 +30,11 @@
             <option *ngFor="let p of puestos" [value]="p">{{ p }}</option>
           </select>
         </div>
-        <div class="form-group form-group-wide">
+        <div class="form-group">
+          <label>Fecha de nacimiento</label>
+          <input type="date" [(ngModel)]="fFecha" />
+        </div>
+        <div class="form-group">
           <label>Sexo</label>
           <div class="radio-row">
             <label><input type="radio" name="sexo" value="M" [(ngModel)]="fSexo" /> Masculino</label>
@@ -39,12 +43,8 @@
             <label><input type="radio" name="sexo" value="N" [(ngModel)]="fSexo" /> Prefiero no decir</label>
           </div>
         </div>
-        <div class="form-group">
-          <label>Fecha de nacimiento</label>
-          <input type="date" [(ngModel)]="fFecha" />
-        </div>
 
-        <div class="form-group form-group-wide">
+        <div class="form-group form-group-full">
           <label>Fotografía (opcional)</label>
           <div class="foto-row">
             <div class="foto-circle" (click)="fotoInput.click()">

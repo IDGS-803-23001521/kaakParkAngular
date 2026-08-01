@@ -1,8 +1,10 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FirebaseService } from '../../services/firebase.service';
 import { MqttRobotService } from '../../services/mqtt-robot.service';
+import { AuthService } from '../../services/auth.service';
 import { ActividadReciente, Cajon, HistorialTarifa, Pago } from '../../models/kaakpark.models';
 import { Subscription } from 'rxjs';
+import * as XLSX from 'xlsx';
 
 @Component({
   standalone: false,
@@ -140,6 +142,316 @@ export class PagosComponent implements OnInit, OnDestroy {
     return lista.sort((a, b) => b.timestamp - a.timestamp);
   }
 
+  // ── Getters: Resumen de pagos filtrados para exportación ───────────────
+  get totalFiltrado(): number {
+    return this.pagosFiltrados.reduce((s, p) => s + p.monto, 0);
+  }
+
+  get promedioFiltrado(): number {
+    const list = this.pagosFiltrados;
+    if (!list.length) return 0;
+    return Math.round(this.totalFiltrado / list.length);
+  }
+
+  get metodoMasUsadoFiltrado(): string {
+    const counts: Record<string, number> = {};
+    for (const p of this.pagosFiltrados) {
+      counts[p.metodo] = (counts[p.metodo] || 0) + 1;
+    }
+    let top = 'N/A';
+    let max = 0;
+    for (const m in counts) {
+      if (counts[m] > max) { max = counts[m]; top = m; }
+    }
+    return top;
+  }
+
+  // ── Exportación a Excel (.xlsx binario nativo con diseño completo) ─────────
+  async exportarExcel(): Promise<void> {
+    const data = this.pagosFiltrados;
+    if (!data.length) return;
+
+    const ExcelJS = await import('exceljs');
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Reporte de Pagos', {
+      views: [{ showGridLines: true }]
+    });
+
+    const hoy = new Date().toLocaleString('es-MX');
+
+    // 1. Título principal de K'ÁAXPARK
+    worksheet.mergeCells('A1:I1');
+    const titleCell = worksheet.getCell('A1');
+    titleCell.value = "REPORTE FINANCIERO DE HISTORIAL DE PAGOS - K'ÁAXPARK";
+    titleCell.font = { name: 'Calibri', size: 16, bold: true, color: { argb: 'FFC9A227' } };
+    titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    worksheet.getRow(1).height = 32;
+
+    // Subtítulo con fecha y parámetros
+    worksheet.mergeCells('A2:I2');
+    const subCell = worksheet.getCell('A2');
+    subCell.value = `Fecha de Generación: ${hoy}  |  Rango: ${this.rangoSeleccionado}  |  Método: ${this.metodoSeleccionado}  |  Estado: ${this.estadoSeleccionado}`;
+    subCell.font = { name: 'Calibri', size: 10, italic: true, color: { argb: 'FF555555' } };
+    subCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    worksheet.getRow(2).height = 20;
+
+    // 2. Bloque KPI de Información Adicional Resumida
+    worksheet.getCell('A4').value = 'INFORMACIÓN ADICIONAL RESUMIDA';
+    worksheet.getCell('A4').font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF111111' } };
+
+    const kpiTitles = ['Rango Filtrado', 'Total Recaudado', 'Operaciones', 'Ticket Promedio', 'Método Preferido'];
+    const kpiValues = [
+      this.rangoSeleccionado,
+      `$${this.totalFiltrado.toLocaleString('es-MX')} MXN`,
+      `${data.length} pagos`,
+      `$${this.promedioFiltrado.toLocaleString('es-MX')} MXN`,
+      this.metodoMasUsadoFiltrado
+    ];
+
+    const kpiHeaderRow = worksheet.getRow(5);
+    kpiTitles.forEach((t, i) => {
+      const cell = kpiHeaderRow.getCell(i + 1);
+      cell.value = t;
+      cell.font = { name: 'Calibri', size: 9, bold: true, color: { argb: 'FF333333' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+        left: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+        bottom: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+        right: { style: 'thin', color: { argb: 'FFCCCCCC' } }
+      };
+    });
+    kpiHeaderRow.height = 22;
+
+    const kpiValRow = worksheet.getRow(6);
+    kpiValues.forEach((v, i) => {
+      const cell = kpiValRow.getCell(i + 1);
+      cell.value = v;
+      cell.font = {
+        name: 'Calibri',
+        size: i === 1 ? 12 : 11,
+        bold: true,
+        color: { argb: i === 1 ? 'FFC9A227' : 'FF111111' }
+      };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+        left: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+        bottom: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+        right: { style: 'thin', color: { argb: 'FFCCCCCC' } }
+      };
+    });
+    kpiValRow.height = 26;
+
+    // 3. Encabezados de Tabla de Datos
+    const tableHeaders = ['Folio', 'Cajón', 'Placa', 'Hora Entrada', 'Hora Salida', 'Duración', 'Método', 'Monto', 'Estado'];
+    const headerRow = worksheet.getRow(8);
+    tableHeaders.forEach((h, i) => {
+      const cell = headerRow.getCell(i + 1);
+      cell.value = h;
+      cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC9A227' } };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      cell.border = {
+        top: { style: 'medium', color: { argb: 'FFB38E1B' } },
+        bottom: { style: 'medium', color: { argb: 'FFB38E1B' } }
+      };
+    });
+    headerRow.height = 26;
+
+    // 4. Filas de Datos de Registros
+    let rIdx = 9;
+    for (const p of data) {
+      const row = worksheet.getRow(rIdx);
+      const values = [
+        p.folio || '',
+        p.cajonDescripcion || '',
+        p.placa || '—',
+        p.horaEntrada || '',
+        p.horaSalida || '',
+        `${p.duracionMin || 0} min`,
+        p.metodo || '',
+        `$${(p.monto || 0).toLocaleString('es-MX')}`,
+        p.estado || ''
+      ];
+
+      const isEven = rIdx % 2 === 0;
+      const bgArgb = isEven ? 'FFFAFAFA' : 'FFFFFFFF';
+
+      values.forEach((v, cIdx) => {
+        const cell = row.getCell(cIdx + 1);
+        cell.value = v;
+        cell.font = {
+          name: 'Calibri',
+          size: 10,
+          bold: cIdx === 7, // Monto en negrita
+          color: {
+            argb: cIdx === 8 ? (p.estado === 'Completado' ? 'FF2E7D32' : 'FFC0392B') : 'FF222222'
+          }
+        };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgArgb } };
+        cell.alignment = {
+          horizontal: cIdx === 7 ? 'right' : (cIdx === 1 ? 'left' : 'center'),
+          vertical: 'middle'
+        };
+        cell.border = {
+          bottom: { style: 'thin', color: { argb: 'FFEFEFEF' } }
+        };
+      });
+      row.height = 21;
+      rIdx++;
+    }
+
+    // Configurar anchos de columna explícitos
+    worksheet.columns = [
+      { width: 18 }, // Folio
+      { width: 26 }, // Cajón
+      { width: 14 }, // Placa
+      { width: 15 }, // Entrada
+      { width: 15 }, // Salida
+      { width: 14 }, // Duración
+      { width: 16 }, // Método
+      { width: 16 }, // Monto
+      { width: 16 }  // Estado
+    ];
+
+    // 5. Generar y descargar archivo XLSX binario con diseño OpenXML
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Reporte_Pagos_KaaxPark_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ── Exportación a PDF (Abre una ventana de reporte limpia e imprimible) ─────
+  mostrarReportePdf = false;
+
+  abrirReportePdf(): void {
+    this.imprimirReporteDirectoPdf();
+  }
+
+  cerrarReportePdf(): void {
+    this.mostrarReportePdf = false;
+  }
+
+  imprimirReportePdf(): void {
+    this.imprimirReporteDirectoPdf();
+  }
+
+  private imprimirReporteDirectoPdf(): void {
+    const data = this.pagosFiltrados;
+    if (!data.length) return;
+
+    const hoy = new Date().toLocaleString('es-MX');
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Reporte Financiero K'áaxPark - PDF</title>
+  <style>
+    @page { size: A4 landscape; margin: 12mm; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; color: #111; margin: 0; padding: 15px; background: #ffffff; }
+    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #C9A227; padding-bottom: 10px; margin-bottom: 15px; }
+    .brand h2 { margin: 0; color: #C9A227; font-size: 22px; font-weight: 800; }
+    .brand span { font-size: 11px; color: #777; }
+    .meta { text-align: right; }
+    .meta h3 { margin: 0; font-size: 14px; color: #111; text-transform: uppercase; }
+    .meta span { font-size: 11px; color: #777; }
+    
+    .kpi-container { display: flex; gap: 10px; margin-bottom: 15px; background: #fafafa; border: 1px solid #eee; border-radius: 8px; padding: 10px; }
+    .kpi-card { flex: 1; text-align: center; }
+    .kpi-card span { display: block; font-size: 9px; color: #777; text-transform: uppercase; font-weight: 700; margin-bottom: 2px; }
+    .kpi-card strong { font-size: 14px; color: #111; font-weight: 800; }
+    .kpi-gold { color: #C9A227 !important; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    th { background: #C9A227; color: #ffffff; font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 8px 6px; text-align: center; border: 1px solid #b38e1b; }
+    td { padding: 6px 8px; font-size: 10px; border-bottom: 1px solid #eee; text-align: center; color: #222; }
+    tr:nth-child(even) td { background: #fcfcfc; }
+    .mono { font-family: Consolas, monospace; color: #555; }
+    .monto { font-weight: 700; color: #111; }
+    .badge-ok { color: #2e7d32; font-weight: 700; }
+    .badge-pending { color: #c0392b; font-weight: 700; }
+
+    .footer { margin-top: 20px; text-align: center; font-size: 9px; color: #aaa; border-top: 1px dashed #ddd; padding-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="brand">
+      <h2>K'ÁAXPARK</h2>
+      <span>Sistema de Gestión e Inteligencia de Estacionamientos</span>
+    </div>
+    <div class="meta">
+      <h3>Reporte Financiero de Pagos</h3>
+      <span>Generado el: ${hoy}</span>
+    </div>
+  </div>
+
+  <div class="kpi-container">
+    <div class="kpi-card"><span>Rango Filtrado</span><strong>${this.rangoSeleccionado}</strong></div>
+    <div class="kpi-card"><span>Total Recaudado</span><strong class="kpi-gold">$${this.totalFiltrado.toLocaleString('es-MX')} MXN</strong></div>
+    <div class="kpi-card"><span>Total Operaciones</span><strong>${data.length} pagos</strong></div>
+    <div class="kpi-card"><span>Ticket Promedio</span><strong>$${this.promedioFiltrado.toLocaleString('es-MX')} MXN</strong></div>
+    <div class="kpi-card"><span>Método Preferido</span><strong>${this.metodoMasUsadoFiltrado}</strong></div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Folio</th>
+        <th>Cajón</th>
+        <th>Placa</th>
+        <th>Entrada</th>
+        <th>Salida</th>
+        <th>Duración</th>
+        <th>Método</th>
+        <th>Monto</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${data.map(p => `
+        <tr>
+          <td class="mono">${p.folio || ''}</td>
+          <td>${p.cajonDescripcion || ''}</td>
+          <td>${p.placa || '—'}</td>
+          <td>${p.horaEntrada || ''}</td>
+          <td>${p.horaSalida || ''}</td>
+          <td>${p.duracionMin || 0} min</td>
+          <td>${p.metodo || ''}</td>
+          <td class="monto">$${(p.monto || 0).toLocaleString('es-MX')}</td>
+          <td class="${p.estado === 'Completado' ? 'badge-ok' : 'badge-pending'}">${p.estado || ''}</td>
+        </tr>
+      `).join('')}
+    </tbody>
+  </table>
+
+  <div class="footer">
+    K'áaxPark Parking System &copy; ${new Date().getFullYear()} — Control Financiero Oficial
+  </div>
+
+  <script>
+    window.onload = function() {
+      window.print();
+    };
+  </script>
+</body>
+</html>`;
+
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
+    }
+  }
+
   // ── Getters: gráfica tendencia mensual ──────────────────────────────────
   get tendenciaMensual(): { mes: string; monto: number }[] {
     const meses = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
@@ -161,7 +473,29 @@ export class PagosComponent implements OnInit, OnDestroy {
   }
 
   // ── Lifecycle ────────────────────────────────────────────────────────────
-  constructor(private fb: FirebaseService, private robot: MqttRobotService) {}
+  constructor(
+    private fb: FirebaseService,
+    private robot: MqttRobotService,
+    private authService: AuthService
+  ) {}
+
+  // ...
+
+  async guardarTarifa(): Promise<void> {
+    if (this.nuevaTarifa <= 0 || this.guardandoTarifa) return;
+    if (this.nuevaTarifa === this.tarifaPorHora) { this.editandoTarifa = false; return; }
+    this.guardandoTarifa = true;
+    try {
+      const user = this.authService.currentUser;
+      const modificadoPor = user?.displayName || user?.email || 'Administrador';
+      await this.fb.updateTarifa(this.nuevaTarifa, this.tarifaPorHora, modificadoPor);
+      this.editandoTarifa = false;
+    } catch (e) {
+      console.error('Error al guardar tarifa:', e);
+    } finally {
+      this.guardandoTarifa = false;
+    }
+  }
 
   ngOnInit(): void {
     this.subs.push(
@@ -244,6 +578,7 @@ export class PagosComponent implements OnInit, OnDestroy {
   }
 
   // ── Tarifa: edición ──────────────────────────────────────────────────────
+  // ── Tarifa: edición ──────────────────────────────────────────────────────
   abrirEdicionTarifa(): void {
     this.nuevaTarifa    = this.tarifaPorHora;
     this.editandoTarifa = true;
@@ -251,20 +586,6 @@ export class PagosComponent implements OnInit, OnDestroy {
 
   cancelarEdicionTarifa(): void {
     this.editandoTarifa = false;
-  }
-
-  async guardarTarifa(): Promise<void> {
-    if (this.nuevaTarifa <= 0 || this.guardandoTarifa) return;
-    if (this.nuevaTarifa === this.tarifaPorHora) { this.editandoTarifa = false; return; }
-    this.guardandoTarifa = true;
-    try {
-      await this.fb.updateTarifa(this.nuevaTarifa, this.tarifaPorHora);
-      this.editandoTarifa = false;
-    } catch (e) {
-      console.error('Error al guardar tarifa:', e);
-    } finally {
-      this.guardandoTarifa = false;
-    }
   }
 
   formatFecha(ts: number): string {

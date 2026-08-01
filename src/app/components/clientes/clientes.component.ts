@@ -5,9 +5,22 @@ import { Subscription } from 'rxjs';
 
 interface Vehiculo {
   id?: string;
-  id_cliente: string;
-  placas: string;
+  id_cliente?: string;
+  idCliente?: string;
+  clienteId?: string;
+  cliente_id?: string;
+  uid?: string;
+  userId?: string;
+  user_id?: string;
+  email?: string;
+  clienteEmail?: string;
+  correo?: string;
+  placas?: string;
+  placa?: string;
+  matricula?: string;
   modelo?: string;
+  marca?: string;
+  color?: string;
 }
 
 @Component({
@@ -16,8 +29,8 @@ interface Vehiculo {
 export class ClientesComponent implements OnInit, OnDestroy {
   activos: Cliente[] = [];
   inactivos: Cliente[] = [];
-  todosLosVehiculos: Vehiculo[] = [];
-  vehiculosFiltrados: Vehiculo[] = [];
+  todosLosVehiculos: any[] = [];
+  vehiculosFiltrados: any[] = [];
 
   fNombre = ''; fApPat = ''; fApMat = ''; fEmail = ''; fTelefono = ''; fSexo: Genero = 'M';
 
@@ -85,14 +98,42 @@ export class ClientesComponent implements OnInit, OnDestroy {
     this.paginaActual = 1;
   }
 
+  get totalClientesCount(): number {
+    return this.activos.length + this.inactivos.length;
+  }
+
+  get totalVehiculosCount(): number {
+    return this.todosLosVehiculos.length;
+  }
+
+  countVehiculos(c: Cliente): number {
+    const clientAuthUid = (c.authUid || '').toString().trim();
+    const clientDocId = (c.id || '').toString().trim();
+    const clientEmail = (c.email || '').toString().toLowerCase().trim();
+
+    return this.todosLosVehiculos.filter((v: any) => {
+      const vAuth = (v.authUid || v.auth_uid || v.uid || v.uid_cliente || v.id_cliente || v.idCliente || v.clienteId || v.cliente_id || v.id_usuario || v.idUsuario || v.usuarioId || v.usuario_id || v.userId || v.user_id || '').toString().trim();
+      const vEmail = (v.email || v.clienteEmail || v.correo || '').toString().toLowerCase().trim();
+
+      const matchAuthUid = !!(clientAuthUid && vAuth && vAuth === clientAuthUid);
+      const matchDocId = !!(clientDocId && vAuth && vAuth === clientDocId);
+      const matchEmail = !!(clientEmail && vEmail && vEmail === clientEmail);
+
+      return matchAuthUid || matchDocId || matchEmail;
+    }).length;
+  }
+
   get listaActual(): Cliente[] {
     return this.tabActual === 'activos' ? this.activos : this.inactivos;
   }
 
   get listaFiltrada(): Cliente[] {
-    const nombre = this.filtroNombre.trim().toLowerCase();
+    const query = this.filtroNombre.trim().toLowerCase();
+    if (!query) return this.listaActual;
     return this.listaActual.filter(c =>
-      !nombre || c.nombre.toLowerCase().includes(nombre)
+      (c.nombre || '').toLowerCase().includes(query) ||
+      (c.email || '').toLowerCase().includes(query) ||
+      (c.telefono || '').toLowerCase().includes(query)
     );
   }
 
@@ -224,7 +265,21 @@ export class ClientesComponent implements OnInit, OnDestroy {
 
   abrirModalVehiculos(c: Cliente): void {
     this.clienteSeleccionado = c;
-    this.vehiculosFiltrados = this.todosLosVehiculos.filter(v => v.id_cliente === c.id);
+    const clientAuthUid = (c.authUid || '').toString().trim();
+    const clientDocId = (c.id || '').toString().trim();
+    const clientEmail = (c.email || '').toString().toLowerCase().trim();
+
+    this.vehiculosFiltrados = this.todosLosVehiculos.filter((v: any) => {
+      const vAuth = (v.authUid || v.auth_uid || v.uid || v.uid_cliente || v.id_cliente || v.idCliente || v.clienteId || v.cliente_id || v.id_usuario || v.idUsuario || v.usuarioId || v.usuario_id || v.userId || v.user_id || '').toString().trim();
+      const vEmail = (v.email || v.clienteEmail || v.correo || '').toString().toLowerCase().trim();
+
+      const matchAuthUid = !!(clientAuthUid && vAuth && vAuth === clientAuthUid);
+      const matchDocId = !!(clientDocId && vAuth && vAuth === clientDocId);
+      const matchEmail = !!(clientEmail && vEmail && vEmail === clientEmail);
+
+      return matchAuthUid || matchDocId || matchEmail;
+    });
+
     this.mostrarModalVehiculos = true;
   }
 
