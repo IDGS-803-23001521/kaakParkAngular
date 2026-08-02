@@ -11,16 +11,28 @@
     </div>
     <div class="alert-error" *ngIf="error">{{ error }}</div>
     <div class="input-group-kaak">
-      <img class="icon" src="assets/images/UsuarioD.png" alt="" />
+      <animated-icons class="login-field-icon"
+        src="assets/icons/user-profile-minimalistic-325dddb6.json"
+        trigger="loop"
+        attributes='{"variationThumbColour":"#C9A227","variationName":"Two Tone","variationNumber":2,"numberOfGroups":2,"backgroundIsGroup":false,"strokeWidth":1.5,"defaultColours":{"group-1":"#2A2A2A","group-2":"#C9A227","background":"#FFFFFF"}}'
+        height="24" width="24"></animated-icons>
       <input type="email" placeholder="Correo electrónico" [(ngModel)]="email" autocomplete="off"
         (keyup.enter)="onLogin()" />
     </div>
     <div class="input-group-kaak">
-      <img class="icon" src="assets/images/candado.png" alt="" />
+      <animated-icons class="login-field-icon"
+        src="assets/icons/unlock-minimalistic-325dddb6.json"
+        trigger="loop"
+        attributes='{"variationThumbColour":"#C9A227","variationName":"Two Tone","variationNumber":2,"numberOfGroups":2,"backgroundIsGroup":false,"strokeWidth":1.5,"defaultColours":{"group-1":"#2A2A2A","group-2":"#C9A227","background":"#FFFFFF"}}'
+        height="24" width="24"></animated-icons>
       <input [type]="showPassword ? 'text' : 'password'" placeholder="Contraseña" [(ngModel)]="password"
         (keyup.enter)="onLogin()" />
       <button type="button" class="eye-btn" (click)="togglePassword()">
-        <img src="assets/images/Ojo.png" alt="ver" />
+        <animated-icons class="login-eye-icon"
+          src="assets/icons/eye-minimalistic-325dddb6.json"
+          trigger="loop"
+          attributes='{"variationThumbColour":"#C9A227","variationName":"Two Tone","variationNumber":2,"numberOfGroups":2,"backgroundIsGroup":false,"strokeWidth":1.5,"defaultColours":{"group-1":"#2A2A2A","group-2":"#C9A227","background":"#FFFFFF"}}'
+          height="22" width="22"></animated-icons>
       </button>
     </div>
     <button class="btn-gold" style="margin-top:0.5rem;" (click)="onLogin()" [disabled]="loading">

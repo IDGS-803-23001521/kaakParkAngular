@@ -435,36 +435,77 @@ export class PagosComponent implements OnInit, OnDestroy {
   <div class="footer">
     K'áaxPark Parking System &copy; ${new Date().getFullYear()} — Control Financiero Oficial
   </div>
-
-  <script>
-    window.onload = function() {
-      window.print();
-    };
-  </script>
 </body>
 </html>`;
 
-    const win = window.open('', '_blank');
-    if (win) {
-      win.document.open();
-      win.document.write(html);
-      win.document.close();
+    let iframe = document.getElementById('pdf-print-iframe') as HTMLIFrameElement;
+    if (iframe && iframe.parentNode) {
+      iframe.parentNode.removeChild(iframe);
+    }
+
+    iframe = document.createElement('iframe');
+    iframe.id = 'pdf-print-iframe';
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    iframe.style.visibility = 'hidden';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document || iframe.contentDocument;
+    if (doc) {
+      doc.open();
+      doc.write(html);
+      doc.close();
+
+      setTimeout(() => {
+        try {
+          iframe.contentWindow?.focus();
+          iframe.contentWindow?.print();
+        } catch (err) {
+          console.error('Error al imprimir iframe:', err);
+        } finally {
+          setTimeout(() => {
+            if (iframe && iframe.parentNode) {
+              iframe.parentNode.removeChild(iframe);
+            }
+          }, 1000);
+        }
+      }, 250);
     }
   }
 
   // ── Getters: gráfica tendencia mensual ──────────────────────────────────
-  get tendenciaMensual(): { mes: string; monto: number }[] {
-    const meses = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
-    const anio  = this.tiempoAhora.getFullYear();
-    return meses.map((mes, idx) => ({
-      mes,
-      monto: this.pagos
-        .filter(p => {
-          const d = new Date(p.timestamp);
-          return d.getFullYear() === anio && d.getMonth() === idx && p.estado === 'Completado';
-        })
-        .reduce((s, p) => s + p.monto, 0)
-    }));
+  get tendenciaMensual(): { mes: string; mesCompleto: string; monto: number; cantidad: number }[] {
+    const meses = [
+      { corto: 'ENE', largo: 'Enero' },
+      { corto: 'FEB', largo: 'Febrero' },
+      { corto: 'MAR', largo: 'Marzo' },
+      { corto: 'ABR', largo: 'Abril' },
+      { corto: 'MAY', largo: 'Mayo' },
+      { corto: 'JUN', largo: 'Junio' },
+      { corto: 'JUL', largo: 'Julio' },
+      { corto: 'AGO', largo: 'Agosto' },
+      { corto: 'SEP', largo: 'Septiembre' },
+      { corto: 'OCT', largo: 'Octubre' },
+      { corto: 'NOV', largo: 'Noviembre' },
+      { corto: 'DIC', largo: 'Diciembre' }
+    ];
+    const anio = this.tiempoAhora.getFullYear();
+    return meses.map((m, idx) => {
+      const pagosDelMes = this.pagos.filter(p => {
+        const d = new Date(p.timestamp);
+        return d.getFullYear() === anio && d.getMonth() === idx && p.estado === 'Completado';
+      });
+      return {
+        mes: m.corto,
+        mesCompleto: m.largo,
+        monto: pagosDelMes.reduce((s, p) => s + p.monto, 0),
+        cantidad: pagosDelMes.length
+      };
+    });
   }
 
   alturaBarra(monto: number): number {
@@ -679,10 +720,105 @@ export class PagosComponent implements OnInit, OnDestroy {
     }
   }
 
-  imprimirTicket(): void { window.print(); }
+  reimprimirTicket(pago: Pago): void {
+    this.ticketPago    = pago;
+    this.mostrarTicket = true;
+  }
+
+  imprimirTicket(): void {
+    if (this.ticketPago) {
+      this.imprimirTicketDirecto(this.ticketPago);
+    } else {
+      window.print();
+    }
+  }
 
   cerrarTicket(): void {
     this.mostrarTicket = false;
     this.ticketPago    = null;
+  }
+
+  private imprimirTicketDirecto(pago: Pago): void {
+    if (!pago) return;
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Ticket ${pago.folio}</title>
+  <style>
+    @page { size: 80mm 150mm; margin: 5mm; }
+    body { font-family: 'Courier New', Courier, monospace; color: #000; margin: 0; padding: 10px; font-size: 11px; text-align: center; }
+    .title { font-size: 16px; font-weight: bold; margin-bottom: 2px; }
+    .sub { font-size: 10px; border-bottom: 1px dashed #000; padding-bottom: 6px; margin-bottom: 8px; }
+    .folio { font-size: 12px; font-weight: bold; margin-bottom: 8px; }
+    .row { display: flex; justify-content: space-between; margin-bottom: 4px; text-align: left; }
+    .row span { color: #444; }
+    .total { border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 8px 0; margin: 10px 0; font-size: 14px; font-weight: bold; display: flex; justify-content: space-between; }
+    .footer { font-size: 9px; margin-top: 10px; color: #555; }
+  </style>
+</head>
+<body>
+  <div class="title">K'ÁAXPARK</div>
+  <div class="sub">Sistema de Estacionamiento</div>
+  <div class="folio">FOLIO: ${pago.folio}</div>
+
+  <div class="row"><span>Cajón:</span><strong>${pago.cajonDescripcion}</strong></div>
+  ${pago.placa && pago.placa !== '—' ? `<div class="row"><span>Placa:</span><strong>${pago.placa}</strong></div>` : ''}
+  <div class="row"><span>Fecha:</span><strong>${pago.fecha}</strong></div>
+  <div class="row"><span>Entrada:</span><strong>${pago.horaEntrada}</strong></div>
+  <div class="row"><span>Salida:</span><strong>${pago.horaSalida || '—'}</strong></div>
+  <div class="row"><span>Duración:</span><strong>${pago.duracionMin || 0} min</strong></div>
+  <div class="row"><span>Método:</span><strong>${pago.metodo}</strong></div>
+
+  <div class="total">
+    <span>TOTAL:</span>
+    <span>$${pago.monto} MXN</span>
+  </div>
+
+  <div class="footer">
+    ¡Gracias por su visita!<br>
+    Conserve este comprobante
+  </div>
+</body>
+</html>`;
+
+    let iframe = document.getElementById('ticket-print-iframe') as HTMLIFrameElement;
+    if (iframe && iframe.parentNode) {
+      iframe.parentNode.removeChild(iframe);
+    }
+
+    iframe = document.createElement('iframe');
+    iframe.id = 'ticket-print-iframe';
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    iframe.style.visibility = 'hidden';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document || iframe.contentDocument;
+    if (doc) {
+      doc.open();
+      doc.write(html);
+      doc.close();
+
+      setTimeout(() => {
+        try {
+          iframe.contentWindow?.focus();
+          iframe.contentWindow?.print();
+        } catch (err) {
+          console.error('Error al imprimir ticket:', err);
+        } finally {
+          setTimeout(() => {
+            if (iframe && iframe.parentNode) {
+              iframe.parentNode.removeChild(iframe);
+            }
+          }, 1000);
+        }
+      }, 250);
+    }
   }
 }

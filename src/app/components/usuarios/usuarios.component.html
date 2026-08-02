@@ -4,8 +4,19 @@
 
     <!-- FORMULARIO ARRIBA -->
     <div class="card-kaak usuarios-form-card">
-      <h5><span class="card-icon">{{ editando ? '✎' : '+' }}</span> {{ editando ? 'Editar usuario' : 'Agregar usuario'
-        }}</h5>
+      <h5 style="display:flex;align-items:center;gap:6px;">
+        <animated-icons *ngIf="!editando"
+          src="assets/icons/plus-minimalistic-ff77881b.json"
+          trigger="loop"
+          attributes='{"variationThumbColour":"#8a6e00","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#8a6e00","group-2":"#8a6e00","background":"#FFFFFF"}}'
+          height="20" width="20" style="display:inline-block;vertical-align:middle;"></animated-icons>
+        <animated-icons *ngIf="editando"
+          src="assets/icons/edit-minimalistic-bef79568.json"
+          trigger="loop"
+          attributes='{"variationThumbColour":"#8a6e00","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#8a6e00","group-2":"#8a6e00","background":"#FFFFFF"}}'
+          height="20" width="20" style="display:inline-block;vertical-align:middle;"></animated-icons>
+        <span>{{ editando ? 'Editar usuario' : 'Agregar usuario' }}</span>
+      </h5>
 
       <div class="form-grid-3">
         <div class="form-group">
@@ -63,24 +74,57 @@
       </div>
 
       <div class="form-actions">
-        <button class="btn-cancelar" (click)="editando ? cancelarEdicion() : limpiarForm()">
-          {{ editando ? 'Cancelar edición' : 'Cancelar' }}
+        <button class="btn-cancelar" (click)="editando ? cancelarEdicion() : limpiarForm()" style="display:inline-flex;align-items:center;gap:6px;">
+          <animated-icons
+            src="assets/icons/error-minimalistic-325dddb6.json"
+            trigger="loop"
+            attributes='{"variationThumbColour":"#d32f2f","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#d32f2f","group-2":"#d32f2f","background":"#FFFFFF"}}'
+            height="18" width="18" style="display:inline-block;vertical-align:middle;"></animated-icons>
+          <span>{{ editando ? 'Cancelar edición' : 'Cancelar' }}</span>
         </button>
-        <button class="btn-guardar" (click)="guardarUsuario()">
-          {{ editando ? 'Guardar cambios' : 'Guardar usuario' }}
+        <button class="btn-guardar" (click)="guardarUsuario()" style="display:inline-flex;align-items:center;gap:6px;">
+          <animated-icons
+            src="assets/icons/save-minimalistic-ff77881b.json"
+            trigger="loop"
+            attributes='{"variationThumbColour":"#111111","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#111111","group-2":"#111111","background":"#FFFFFF"}}'
+            height="18" width="18" style="display:inline-block;vertical-align:middle;"></animated-icons>
+          <span>{{ editando ? 'Guardar cambios' : 'Guardar usuario' }}</span>
         </button>
       </div>
     </div>
 
     <!-- TABLAS ABAJO -->
     <div class="card-kaak usuarios-table-card card-scroll">
-      <div class="tabs-row" style="flex-shrink:0;">
-        <button class="tab-btn" [class.active]="tabActual==='activos'" (click)="cambiarTab('activos')">
-          Activos <span class="tab-count" [class.tab-count-gold]="tabActual==='activos'">{{ activos.length }}</span>
-        </button>
-        <button class="tab-btn" [class.active]="tabActual==='inactivos'" (click)="cambiarTab('inactivos')">
-          Inactivos <span class="tab-count">{{ inactivos.length }}</span>
-        </button>
+      <div
+        style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; flex-shrink:0; margin-bottom:0.75rem;">
+        <div class="tabs-row" style="margin-bottom:0;">
+          <button class="tab-btn" [class.active]="tabActual==='activos'" (click)="cambiarTab('activos')">
+            Activos <span class="tab-count" [class.tab-count-gold]="tabActual==='activos'">{{ activos.length }}</span>
+          </button>
+          <button class="tab-btn" [class.active]="tabActual==='inactivos'" (click)="cambiarTab('inactivos')">
+            Inactivos <span class="tab-count">{{ inactivos.length }}</span>
+          </button>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button class="btn-guardar btn-export-excel" [disabled]="listaFiltrada.length === 0"
+            (click)="exportarExcel()" style="display:inline-flex;align-items:center;gap:6px;">
+            <animated-icons
+              src="assets/icons/reports-minimalistic-ff77881b.json"
+              trigger="loop"
+              attributes='{"variationThumbColour":"#2e7d32","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#2e7d32","group-2":"#2e7d32","background":"#FFFFFF"}}'
+              height="35" width="35" style="display:inline-block;vertical-align:middle;"></animated-icons>
+            <span>Exportar Excel</span>
+          </button>
+          <button class="btn-cancelar btn-export-pdf" [disabled]="listaFiltrada.length === 0"
+            (click)="abrirReportePdf()" style="display:inline-flex;align-items:center;gap:6px;">
+            <animated-icons
+              src="assets/icons/pdf-minimalistic-ff77881b.json"
+              trigger="loop"
+              attributes='{"variationThumbColour":"#d32f2f","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#d32f2f","group-2":"#d32f2f","background":"#FFFFFF"}}'
+              height="35" width="35" style="display:inline-block;vertical-align:middle;"></animated-icons>
+            <span>Exportar PDF</span>
+          </button>
+        </div>
       </div>
 
       <!-- FILTROS -->
@@ -91,60 +135,108 @@
           <option value="">Todos los puestos</option>
           <option *ngFor="let p of puestos" [value]="p">{{ p }}</option>
         </select>
-        <button class="btn-limpiar-filtro" *ngIf="filtroNombre || filtroPuesto" (click)="limpiarFiltros()">✕
-          Limpiar</button>
+        <button class="btn-limpiar-filtro" *ngIf="filtroNombre || filtroPuesto" (click)="limpiarFiltros()" style="display:inline-flex;align-items:center;gap:4px;">
+          <animated-icons
+            src="assets/icons/remove-filter-minimalistic-325dddb6.json"
+            trigger="loop"
+            attributes='{"variationThumbColour":"#d32f2f","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#d32f2f","group-2":"#d32f2f","background":"#FFFFFF"}}'
+            height="18" width="18" style="display:inline-block;vertical-align:middle;"></animated-icons>
+          <span>Limpiar</span>
+        </button>
       </div>
 
       <div class="card-scroll-body">
-      <!-- Activos -->
-      <ng-container *ngIf="tabActual==='activos'">
-        <div class="table-head-row table-cols-activos">
-          <span style="padding-left:37px;">Nombre</span>
-          <span>Puesto</span>
-          <span style="text-align:center;">Acciones</span>
-        </div>
-        <div *ngFor="let u of listaPaginada" class="user-row table-cols-activos">
-          <div class="user-name-cell">
-            <div class="avatar-initials" [class.avatar-con-foto]="u.foto">
-              <img *ngIf="u.foto" [src]="u.foto" alt="" />
-              <span *ngIf="!u.foto">{{ initials(u.nombre) }}</span>
+        <!-- Activos -->
+        <ng-container *ngIf="tabActual==='activos'">
+          <div class="table-head-row table-cols-activos">
+            <span style="padding-left:37px;">Nombre</span>
+            <span>Puesto</span>
+            <span style="text-align:center;">Acciones</span>
+          </div>
+          <div *ngFor="let u of listaPaginada" class="user-row table-cols-activos">
+            <div class="user-name-cell">
+              <div class="avatar-initials" [class.avatar-con-foto]="u.foto">
+                <img *ngIf="u.foto" [src]="u.foto" alt="" />
+                <span *ngIf="!u.foto">{{ initials(u.nombre) }}</span>
+              </div>
+              <strong>{{ u.nombre }}</strong>
             </div>
-            <strong>{{ u.nombre }}</strong>
+            <span class="u-puesto">{{ u.puesto }}</span>
+            <div class="acciones-cell">
+              <button class="btn-cred" (click)="generarCredenciales(u)">
+                <animated-icons
+                  src="assets/icons/lock-minimalistic-926b8ba3.json"
+                  trigger="loop"
+                  attributes='{"variationThumbColour":"#000000","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#333333","group-2":"#000000","background":"#FFFFFF"}}'
+                  height="18" width="18" style="display:inline-block;vertical-align:middle;"></animated-icons>
+                <span>Credenciales</span>
+              </button>
+              <button class="btn-icon" title="Editar" (click)="editarUsuario(u)">
+                <animated-icons
+                  src="assets/icons/edit-minimalistic-bef79568.json"
+                  trigger="loop"
+                  attributes='{"variationThumbColour":"#000000","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#333333","group-2":"#000000","background":"#FFFFFF"}}'
+                  height="18" width="18" style="display:inline-block;vertical-align:middle;"></animated-icons>
+                <span>Editar</span>
+              </button>
+              <button class="toggle-btn" title="Inactivar usuario" (click)="inactivarUsuario(u)">
+                <animated-icons
+                  src="assets/icons/minus-minimalistic-926b8ba3.json"
+                  trigger="loop"
+                  attributes='{"variationThumbColour":"#d32f2f","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#d32f2f","group-2":"#d32f2f","background":"#FFFFFF"}}'
+                  height="18" width="18" style="display:inline-block;vertical-align:middle;"></animated-icons>
+                <span>Inactivar</span>
+              </button>
+            </div>
           </div>
-          <span class="u-puesto">{{ u.puesto }}</span>
-          <div class="acciones-cell">
-            <button class="btn-cred" (click)="generarCredenciales(u)">🔑 Credenciales</button>
-            <button class="btn-icon" title="Editar" (click)="editarUsuario(u)">✏️</button>
-            <button class="toggle-btn" title="Inactivar" (click)="inactivarUsuario(u)">✓</button>
-          </div>
-        </div>
-        <div *ngIf="listaPaginada.length===0" class="empty-msg">Sin usuarios que coincidan con la búsqueda</div>
-      </ng-container>
+          <div *ngIf="listaPaginada.length===0" class="empty-msg">Sin usuarios que coincidan con la búsqueda</div>
+        </ng-container>
 
-      <!-- Inactivos -->
-      <ng-container *ngIf="tabActual==='inactivos'">
-        <div class="table-head-row table-cols-inactivos">
-          <span style="padding-left:37px;">Nombre</span>
-          <span>Puesto</span>
-          <span style="text-align:center;">Acciones</span>
-        </div>
-        <div *ngFor="let u of listaPaginada" class="user-row user-row-inactivo table-cols-inactivos">
-          <div class="user-name-cell">
-            <div class="avatar-initials avatar-inactivo" [class.avatar-con-foto]="u.foto">
-              <img *ngIf="u.foto" [src]="u.foto" alt="" />
-              <span *ngIf="!u.foto">{{ initials(u.nombre) }}</span>
+        <!-- Inactivos -->
+        <ng-container *ngIf="tabActual==='inactivos'">
+          <div class="table-head-row table-cols-inactivos">
+            <span style="padding-left:37px;">Nombre</span>
+            <span>Puesto</span>
+            <span style="text-align:center;">Acciones</span>
+          </div>
+          <div *ngFor="let u of listaPaginada" class="user-row user-row-inactivo table-cols-inactivos">
+            <div class="user-name-cell">
+              <div class="avatar-initials avatar-inactivo" [class.avatar-con-foto]="u.foto">
+                <img *ngIf="u.foto" [src]="u.foto" alt="" />
+                <span *ngIf="!u.foto">{{ initials(u.nombre) }}</span>
+              </div>
+              <strong>{{ u.nombre }}</strong>
             </div>
-            <strong>{{ u.nombre }}</strong>
+            <span class="u-puesto">{{ u.puesto }}</span>
+            <div class="acciones-cell">
+              <button class="btn-icon" title="Editar" (click)="editarUsuario(u)">
+                <animated-icons
+                  src="assets/icons/edit-minimalistic-bef79568.json"
+                  trigger="loop"
+                  attributes='{"variationThumbColour":"#000000","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#333333","group-2":"#000000","background":"#FFFFFF"}}'
+                  height="18" width="18" style="display:inline-block;vertical-align:middle;"></animated-icons>
+                <span>Editar</span>
+              </button>
+              <button class="btn-icon btn-icon-eliminar" title="Eliminar" (click)="solicitarEliminar(u)">
+                <animated-icons
+                  src="assets/icons/delete-minimalistic-926b8ba3.json"
+                  trigger="loop"
+                  attributes='{"variationThumbColour":"#d32f2f","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#d32f2f","group-2":"#d32f2f","background":"#FFFFFF"}}'
+                  height="18" width="18" style="display:inline-block;vertical-align:middle;"></animated-icons>
+                <span>Eliminar</span>
+              </button>
+              <button class="toggle-btn-inactivo" title="Reactivar usuario" (click)="activarUsuario(u)">
+                <animated-icons
+                  src="assets/icons/activate-minimalistic-926b8ba3.json"
+                  trigger="loop"
+                  attributes='{"variationThumbColour":"#2e7d32","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#2e7d32","group-2":"#2e7d32","background":"#FFFFFF"}}'
+                  height="18" width="18" style="display:inline-block;vertical-align:middle;"></animated-icons>
+                <span>Reactivar</span>
+              </button>
+            </div>
           </div>
-          <span class="u-puesto">{{ u.puesto }}</span>
-          <div class="acciones-cell">
-            <button class="btn-icon" title="Editar" (click)="editarUsuario(u)">✏️</button>
-            <button class="btn-icon btn-icon-eliminar" title="Eliminar" (click)="solicitarEliminar(u)">🗑</button>
-            <button class="toggle-btn-inactivo" title="Activar" (click)="activarUsuario(u)">✓</button>
-          </div>
-        </div>
-        <div *ngIf="listaPaginada.length===0" class="empty-msg">Sin usuarios que coincidan con la búsqueda</div>
-      </ng-container>
+          <div *ngIf="listaPaginada.length===0" class="empty-msg">Sin usuarios que coincidan con la búsqueda</div>
+        </ng-container>
       </div>
 
       <!-- PAGINACIÓN -->
@@ -183,10 +275,18 @@
     <div class="modal-confirm-icon">🗑</div>
     <h5>¿Eliminar usuario?</h5>
     <p class="modal-sub" *ngIf="usuarioAEliminar">
-      Estás por eliminar a <strong>{{ usuarioAEliminar.nombre }}</strong>. Esta acción ocultará al usuario del sistema y podrás restaurarlo solo desde la base de datos.
+      Estás por eliminar a <strong>{{ usuarioAEliminar.nombre }}</strong>. Esta acción ocultará al usuario del sistema y
+      podrás restaurarlo solo desde la base de datos.
     </p>
     <div class="form-actions" style="justify-content:center; margin-top:1.25rem;">
-      <button class="btn-cancelar" (click)="cancelarEliminar()">Cancelar</button>
+      <button class="btn-cancelar" (click)="cancelarEliminar()" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;">
+        <animated-icons
+          src="assets/icons/error-minimalistic-325dddb6.json"
+          trigger="loop"
+          attributes='{"variationThumbColour":"#d32f2f","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#d32f2f","group-2":"#d32f2f","background":"#FFFFFF"}}'
+          height="18" width="18" style="display:inline-block;vertical-align:middle;"></animated-icons>
+        <span>Cancelar</span>
+      </button>
       <button class="btn-eliminar-confirm" (click)="confirmarEliminar()">Sí, eliminar</button>
     </div>
   </div>

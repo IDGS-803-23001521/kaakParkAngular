@@ -381,8 +381,12 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.chartTipo !== 'entradas-salidas') this.updateMainChart();
   }
 
-  // ── Generar reporte ───────────────────────────────────────────────────────
+  // ── Generar reporte PDF ──────────────────────────────────────────────────
   async generarReporte(): Promise<void> {
+    await this.generarReportePdf();
+  }
+
+  async generarReportePdf(): Promise<void> {
     if (this.generando) return;
     this.generando = true;
     try {
@@ -395,14 +399,119 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
         periodo: `${this.fechaInicio}_${this.fechaFin}`,
         resumen
       };
-      await this.fb.addReporte(reporte);
-
-      this.abrirReporte(reporte);
+      this.fb.addReporte(reporte).catch(e => console.error('Error guardando reporte:', e));
+      this.imprimirReporteDirectoPdf(reporte);
     } catch (e) {
-      console.error('Error al generar reporte:', e);
+      console.error('Error al generar reporte PDF:', e);
     } finally {
       this.generando = false;
     }
+  }
+
+  // ── Generar reporte Excel ─────────────────────────────────────────────────
+  async generarReporteExcel(): Promise<void> {
+    if (this.generando) return;
+    this.generando = true;
+    try {
+      const hoy    = new Date().toISOString().slice(0, 10);
+      const nombre = `Reporte ${this.moduloLabel} — ${this.periodoLabel}`;
+      const resumen = this.computarResumen();
+
+      const reporte: ReporteHistorial = {
+        nombre, fecha: hoy, tipo: this.modulo,
+        periodo: `${this.fechaInicio}_${this.fechaFin}`,
+        resumen
+      };
+      this.fb.addReporte(reporte).catch(e => console.error('Error guardando reporte:', e));
+      await this.exportarExcelDesdeResumen(nombre, resumen);
+    } catch (e) {
+      console.error('Error al generar reporte Excel:', e);
+    } finally {
+      this.generando = false;
+    }
+  }
+
+  // ── Exportación a Excel (.xlsx nativo) desde resumen ──────────────────────
+  async exportarExcelDesdeResumen(titulo: string, resumen: { label: string; valor: string; seccion?: string }[]): Promise<void> {
+    const ExcelJS = await import('exceljs');
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Reporte', { views: [{ showGridLines: true }] });
+
+    const hoy = new Date().toLocaleString('es-MX');
+
+    // 1. Título principal
+    worksheet.mergeCells('A1:C1');
+    const titleCell = worksheet.getCell('A1');
+    titleCell.value = `K'ÁAXPARK — ${titulo.toUpperCase()}`;
+    titleCell.font = { name: 'Calibri', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
+    titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1A1A1E' } };
+    titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    worksheet.getRow(1).height = 36;
+
+    // 2. Metadatos
+    worksheet.getCell('A3').value = `Fecha de emisión: ${hoy}`;
+    worksheet.getCell('A3').font = { name: 'Calibri', size: 10, italic: true, color: { argb: 'FF666666' } };
+
+    // 3. Agrupar items por sección
+    const grupos: { [seccion: string]: { label: string; valor: string }[] } = {};
+    for (const item of resumen) {
+      const sec = item.seccion || 'Metadatos del Reporte';
+      if (!grupos[sec]) grupos[sec] = [];
+      grupos[sec].push({ label: item.label, valor: item.valor });
+    }
+
+    let rIdx = 5;
+    for (const sec in grupos) {
+      worksheet.mergeCells(`A${rIdx}:C${rIdx}`);
+      const secCell = worksheet.getCell(`A${rIdx}`);
+      secCell.value = sec.toUpperCase();
+      secCell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+      secCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC9A227' } };
+      secCell.alignment = { horizontal: 'left', vertical: 'middle' };
+      rIdx++;
+
+      const headerRow = worksheet.getRow(rIdx);
+      headerRow.getCell(1).value = 'Métrica / Indicador';
+      headerRow.getCell(2).value = 'Valor Calculado';
+      headerRow.getCell(3).value = 'Estado';
+      for (let c = 1; c <= 3; c++) {
+        const cell = headerRow.getCell(c);
+        cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF333333' } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEFEFEF' } };
+        cell.alignment = { horizontal: c === 3 ? 'center' : 'left', vertical: 'middle' };
+      }
+      rIdx++;
+
+      for (const item of grupos[sec]) {
+        const row = worksheet.getRow(rIdx);
+        row.getCell(1).value = item.label;
+        row.getCell(2).value = item.valor;
+        row.getCell(3).value = 'Registrado';
+        for (let c = 1; c <= 3; c++) {
+          const cell = row.getCell(c);
+          cell.font = { name: 'Calibri', size: 10 };
+          cell.alignment = { horizontal: c === 3 ? 'center' : 'left', vertical: 'middle' };
+          cell.border = { bottom: { style: 'thin', color: { argb: 'FFEFEFEF' } } };
+        }
+        rIdx++;
+      }
+      rIdx++;
+    }
+
+    worksheet.columns = [
+      { width: 34 },
+      { width: 28 },
+      { width: 16 }
+    ];
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Reporte_${titulo.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    link.click();
+    URL.revokeObjectURL(url);
   }
 
   private computarResumen(): { label: string; valor: string; seccion?: string }[] {
@@ -490,4 +599,137 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   imprimirReporte(): void { window.print(); }
+
+  // ── Generar documento imprimible PDF profesional vía iframe (sin bloquear la ventana) ─────
+  imprimirReporteDirectoPdf(r: ReporteHistorial): void {
+    const resumen = r.resumen || [];
+    if (!resumen.length) return;
+
+    const hoy = new Date().toLocaleString('es-MX');
+    const primero = resumen[0];
+    const rangoLabel = (primero && primero.label === 'Rango de fechas') ? primero.valor : this.periodoLabel;
+
+    const items = (primero && primero.label === 'Rango de fechas') ? resumen.slice(1) : resumen;
+    const grupos: { [seccion: string]: { label: string; valor: string }[] } = {};
+    for (const item of items) {
+      const sec = item.seccion || 'Resumen General';
+      if (!grupos[sec]) grupos[sec] = [];
+      grupos[sec].push({ label: item.label, valor: item.valor });
+    }
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${r.nombre}</title>
+  <style>
+    @page { size: A4 landscape; margin: 12mm; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; color: #111; margin: 0; padding: 15px; background: #ffffff; }
+    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #C9A227; padding-bottom: 10px; margin-bottom: 15px; }
+    .brand h2 { margin: 0; color: #C9A227; font-size: 22px; font-weight: 800; }
+    .brand span { font-size: 11px; color: #777; }
+    .meta { text-align: right; }
+    .meta h3 { margin: 0; font-size: 14px; color: #111; text-transform: uppercase; }
+    .meta span { font-size: 11px; color: #777; }
+    
+    .kpi-container { display: flex; gap: 10px; margin-bottom: 15px; background: #fafafa; border: 1px solid #eee; border-radius: 8px; padding: 10px; }
+    .kpi-card { flex: 1; text-align: center; }
+    .kpi-card span { display: block; font-size: 9px; color: #777; text-transform: uppercase; font-weight: 700; margin-bottom: 2px; }
+    .kpi-card strong { font-size: 14px; color: #111; font-weight: 800; }
+    .kpi-gold { color: #C9A227 !important; }
+
+    .sec-title { font-size: 12px; font-weight: 700; color: #C9A227; text-transform: uppercase; margin-top: 15px; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 6px; margin-bottom: 15px; }
+    th { background: #C9A227; color: #ffffff; font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 8px 6px; text-align: center; border: 1px solid #b38e1b; }
+    td { padding: 7px 10px; font-size: 10px; border-bottom: 1px solid #eee; text-align: center; color: #222; }
+    tr:nth-child(even) td { background: #fcfcfc; }
+    .left { text-align: left; }
+    .bold { font-weight: 700; color: #111; }
+
+    .footer { margin-top: 20px; text-align: center; font-size: 9px; color: #aaa; border-top: 1px dashed #ddd; padding-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="brand">
+      <h2>K'ÁAXPARK</h2>
+      <span>Sistema de Gestión e Inteligencia de Estacionamientos</span>
+    </div>
+    <div class="meta">
+      <h3>${r.nombre}</h3>
+      <span>Generado el: ${hoy}</span>
+    </div>
+  </div>
+
+  <div class="kpi-container">
+    <div class="kpi-card"><span>Módulo</span><strong class="kpi-gold">${(r.tipo || 'General').toUpperCase()}</strong></div>
+    <div class="kpi-card"><span>Rango de Fechas</span><strong>${rangoLabel}</strong></div>
+    <div class="kpi-card"><span>Fecha Emisión</span><strong>${r.fecha}</strong></div>
+  </div>
+
+  ${Object.keys(grupos).map(sec => `
+    <div class="sec-title">${sec}</div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:50%;">Métrica / Indicador</th>
+          <th style="width:50%;">Valor Calculado</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${grupos[sec].map(item => `
+          <tr>
+            <td class="left bold">${item.label}</td>
+            <td class="left">${item.valor}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `).join('')}
+
+  <div class="footer">
+    K'áaxPark Parking System &copy; ${new Date().getFullYear()} — Reporte Oficial de Inteligencia Operativa
+  </div>
+</body>
+</html>`;
+
+    let iframe = document.getElementById('pdf-print-iframe') as HTMLIFrameElement;
+    if (iframe && iframe.parentNode) {
+      iframe.parentNode.removeChild(iframe);
+    }
+
+    iframe = document.createElement('iframe');
+    iframe.id = 'pdf-print-iframe';
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    iframe.style.visibility = 'hidden';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document || iframe.contentDocument;
+    if (doc) {
+      doc.open();
+      doc.write(html);
+      doc.close();
+
+      setTimeout(() => {
+        try {
+          iframe.contentWindow?.focus();
+          iframe.contentWindow?.print();
+        } catch (err) {
+          console.error('Error al imprimir iframe:', err);
+        } finally {
+          setTimeout(() => {
+            if (iframe && iframe.parentNode) {
+              iframe.parentNode.removeChild(iframe);
+            }
+          }, 1000);
+        }
+      }, 250);
+    }
+  }
 }

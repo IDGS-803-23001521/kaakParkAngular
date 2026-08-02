@@ -38,7 +38,9 @@
       <div class="sub">por vehículo, hoy</div>
     </div>
     <div class="dash-stat-card">
-      <div class="dash-card-title">Energía Solar</div>
+      <div class="dash-card-title" style="display:flex;align-items:center;gap:6px;">
+        <span>Energía Solar</span>
+      </div>
       <div class="big-num"><span>{{ sustentabilidad?.porcentajeSolar || 0 }}%</span></div>
       <div class="progress-track">
         <div class="progress-fill" [style.width.%]="sustentabilidad?.porcentajeSolar || 0"></div>

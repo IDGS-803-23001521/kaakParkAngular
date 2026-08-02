@@ -6,14 +6,13 @@
     <div class="card-kaak motor-conn-card">
       <div class="motor-conn-row">
         <div class="motor-conn-info">
-          <span class="motor-status-dot"
-            [class.online]="(conexion$ | async) === 'conectado'"
+          <span class="motor-status-dot" [class.online]="(conexion$ | async) === 'conectado'"
             [class.error]="(conexion$ | async) === 'error'"></span>
           <h5>Control de Motores</h5>
-          <span class="motor-conn-label"
-            [class.online]="(conexion$ | async) === 'conectado'"
+          <span class="motor-conn-label" [class.online]="(conexion$ | async) === 'conectado'"
             [class.error]="(conexion$ | async) === 'error'">
-            {{ (conexion$ | async) === 'conectado' ? 'En línea' : ((conexion$ | async) === 'error' ? 'Error' : 'Desconectado') }}
+            {{ (conexion$ | async) === 'conectado' ? 'En línea' : ((conexion$ | async) === 'error' ? 'Error' :
+            'Desconectado') }}
           </span>
         </div>
 
@@ -25,7 +24,11 @@
       </div>
 
       <div class="motor-exec-banner" *ngIf="$any(estado$ | async)?.ejecutando">
-        <span class="motor-spin">⟳</span> Ejecutando secuencia en tiempo real…
+        <span class="motor-spin"><animated-icons
+            src="assets/icons/sync-minimalistic-325dddb6.json"
+            trigger="loop"
+            attributes='{"variationThumbColour":"#536DFE","variationName":"Two Tone","variationNumber":2,"numberOfGroups":2,"backgroundIsGroup":false,"strokeWidth":1.5,"defaultColours":{"group-1":"#000000","group-2":"#536DFE","background":"#FFFFFF"}}'
+            height="25" width="25"></animated-icons></span> Ejecutando secuencia en tiempo real…
       </div>
     </div>
 
@@ -58,7 +61,12 @@
             <input class="motor-range" type="range" min="200" max="5000" step="100" [(ngModel)]="p1Vel" />
             <div class="motor-card-actions">
               <button class="btn-guardar" [disabled]="ocupado" (click)="enviarComando('P1')">▶ Mover</button>
-              <button class="btn-icon motor-add-mini" title="Agregar a la secuencia" (click)="agregarDesdeMotor('P1')">+</button>
+              <button class="btn-icon motor-add-mini" title="Agregar a la secuencia"
+                (click)="agregarDesdeMotor('P1')"><animated-icons
+                  src="assets/icons/plus-minimalistic-ff77881b.json"
+                  trigger="loop"
+                  attributes='{"variationThumbColour":"#8a6e00","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#8a6e00","group-2":"#8a6e00","background":"#FFFFFF"}}'
+                  height="18" width="18" style="display:inline-block;vertical-align:middle;"></animated-icons></button>
             </div>
           </div>
 
@@ -79,7 +87,12 @@
             <input class="motor-range" type="range" min="200" max="5000" step="100" [(ngModel)]="p2Vel" />
             <div class="motor-card-actions">
               <button class="btn-guardar" [disabled]="ocupado" (click)="enviarComando('P2')">▶ Mover</button>
-              <button class="btn-icon motor-add-mini" title="Agregar a la secuencia" (click)="agregarDesdeMotor('P2')">+</button>
+              <button class="btn-icon motor-add-mini" title="Agregar a la secuencia"
+                (click)="agregarDesdeMotor('P2')"><animated-icons
+                  src="assets/icons/plus-minimalistic-ff77881b.json"
+                  trigger="loop"
+                  attributes='{"variationThumbColour":"#8a6e00","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#8a6e00","group-2":"#8a6e00","background":"#FFFFFF"}}'
+                  height="18" width="18" style="display:inline-block;vertical-align:middle;"></animated-icons></button>
             </div>
           </div>
 
@@ -91,18 +104,20 @@
                 <strong>Motor {{ m.slice(1) }}</strong>
                 <small>TB6612 · DC</small>
               </div>
-              <span class="motor-dir-tag"
-                [class.forward]="dcVel[m] > 0"
-                [class.reverse]="dcVel[m] < 0"
+              <span class="motor-dir-tag" [class.forward]="dcVel[m] > 0" [class.reverse]="dcVel[m] < 0"
                 [class.stopped]="dcVel[m] === 0">
-                {{ dcVel[m] > 0 ? '▶ Avance' : (dcVel[m] < 0 ? '◀ Reversa' : '⏹ Parado') }}
-              </span>
+                {{ dcVel[m] > 0 ? '▶ Avance' : (dcVel[m] < 0 ? '◀ Reversa' : '⏹ Parado' ) }} </span>
             </div>
             <div class="motor-slider-label"><span>Velocidad</span><strong>{{ dcVel[m] }}</strong></div>
             <input class="motor-range" type="range" min="-255" max="255" step="5" [(ngModel)]="dcVel[m]" />
             <div class="motor-card-actions">
               <button class="btn-guardar" [disabled]="ocupado" (click)="enviarDC(m)">▶ Aplicar</button>
-              <button class="btn-icon motor-add-mini" title="Agregar a la secuencia" (click)="agregarDC(m)">+</button>
+              <button class="btn-icon motor-add-mini" title="Agregar a la secuencia"
+                (click)="agregarDC(m)"><animated-icons
+                  src="assets/icons/plus-minimalistic-ff77881b.json"
+                  trigger="loop"
+                  attributes='{"variationThumbColour":"#8a6e00","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#8a6e00","group-2":"#8a6e00","background":"#FFFFFF"}}'
+                  height="18" width="18" style="display:inline-block;vertical-align:middle;"></animated-icons></button>
             </div>
           </div>
 
@@ -114,12 +129,22 @@
 
         <div class="motor-panel-toggle-row" *ngIf="modoPanel === 'lista'">
           <h5>Secuencias Guardadas</h5>
-          <button class="btn-guardar motor-nueva-btn" (click)="nuevaSecuencia()">+ Nueva Secuencia</button>
+          <button class="btn-guardar motor-nueva-btn" (click)="nuevaSecuencia()"> <animated-icons
+              src="assets/icons/plus-minimalistic-ff77881b.json"
+              trigger="loop"
+              attributes='{"variationThumbColour":"#8a6e00","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#8a6e00","group-2":"#8a6e00","background":"#FFFFFF"}}'
+              height="30" width="30" style="display:inline-block;vertical-align:middle;"></animated-icons>
+            <span>Nueva Secuencia</span>
+          </button>
         </div>
 
         <div class="motor-panel-toggle-row" *ngIf="modoPanel === 'editor'">
           <h5>{{ editandoId ? 'Editar Secuencia' : 'Nueva Secuencia' }}</h5>
-          <button class="btn-cancelar motor-volver-btn" (click)="volverALista()">← Volver a la Lista</button>
+          <button class="btn-cancelar motor-volver-btn" (click)="volverALista()"><animated-icons
+              src="assets/icons/back-minimalistic-325dddb6.json"
+              trigger="loop"
+              attributes='{"variationThumbColour":"#536DFE","variationName":"Two Tone","variationNumber":2,"numberOfGroups":2,"backgroundIsGroup":false,"strokeWidth":1.5,"defaultColours":{"group-1":"#000000","group-2":"#536DFE","background":"#FFFFFF"}}'
+              height="30" width="30"></animated-icons>Volver a la Lista</button>
         </div>
 
         <!-- VISTA LISTA -->
@@ -133,9 +158,28 @@
               <div class="motor-seq-name">{{ s.nombre }}</div>
               <div class="motor-seq-count">{{ s.pasos.length }} paso{{ s.pasos.length !== 1 ? 's' : '' }}</div>
             </div>
-            <button class="btn-icon motor-btn-exec" title="Ejecutar" [disabled]="ocupado" (click)="ejecutarSecuencia(s)">▶</button>
-            <button class="btn-icon" title="Editar" (click)="editarSecuencia(s)">✏️</button>
-            <button class="btn-icon btn-icon-eliminar" title="Eliminar" (click)="eliminarSecuencia(s)">🗑</button>
+            <button class="btn-icon motor-btn-exec" title="Ejecutar" [disabled]="ocupado" (click)="ejecutarSecuencia(s)"
+              style="display:inline-flex;align-items:center;justify-content:center;">
+              <animated-icons
+                src="assets/icons/play-minimalistic-ff77881b.json"
+                trigger="loop"
+                attributes='{"variationThumbColour":"#2e7d32","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#2e7d32","group-2":"#2e7d32","background":"#FFFFFF"}}'
+                height="20" width="20" style="display:inline-block;vertical-align:middle;"></animated-icons>
+            </button>
+            <button class="btn-icon" title="Editar" (click)="editarSecuencia(s)">
+              <animated-icons
+                src="assets/icons/edit-minimalistic-bef79568.json"
+                trigger="loop"
+                attributes='{"variationThumbColour":"#000000","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#333333","group-2":"#000000","background":"#FFFFFF"}}'
+                height="20" width="20" style="display:inline-block;vertical-align:middle;"></animated-icons>
+            </button>
+            <button class="btn-icon btn-icon-eliminar" title="Eliminar" (click)="eliminarSecuencia(s)">
+              <animated-icons
+                src="assets/icons/delete-minimalistic-926b8ba3.json"
+                trigger="loop"
+                attributes='{"variationThumbColour":"#d32f2f","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#d32f2f","group-2":"#d32f2f","background":"#FFFFFF"}}'
+                height="20" width="20" style="display:inline-block;vertical-align:middle;"></animated-icons>
+            </button>
           </div>
         </div>
 
@@ -146,9 +190,18 @@
             <span class="motor-especiales-label">Esperar</span>
             <input class="filtro-input motor-espera-input" type="number" [(ngModel)]="esperarMs" />
             <span class="motor-add-unidad">ms</span>
-            <button class="btn-icon motor-add-mini" title="Agregar espera" (click)="agregarEsperar()">+</button>
+            <button class="btn-icon motor-add-mini" title="Agregar espera" (click)="agregarEsperar()"><animated-icons
+                src="assets/icons/plus-minimalistic-ff77881b.json"
+                trigger="loop"
+                attributes='{"variationThumbColour":"#8a6e00","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#8a6e00","group-2":"#8a6e00","background":"#FFFFFF"}}'
+                height="18" width="18" style="display:inline-block;vertical-align:middle;"></animated-icons></button>
             <span class="motor-especiales-sep"></span>
-            <button class="btn-cancelar motor-btn-parar-dc" (click)="agregarPararDc()">+ Parar DC</button>
+            <button class="btn-cancelar motor-btn-parar-dc" (click)="agregarPararDc()"><animated-icons
+                src="assets/icons/plus-minimalistic-ff77881b.json"
+                trigger="loop"
+                attributes='{"variationThumbColour":"#8a6e00","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#8a6e00","group-2":"#8a6e00","background":"#FFFFFF"}}'
+                height="18" width="18" style="display:inline-block;vertical-align:middle;"></animated-icons> Parar
+              DC</button>
           </div>
 
           <div class="card-scroll-body">
@@ -177,9 +230,27 @@
                   </div>
                 </ng-container>
 
-                <button class="btn-icon" title="Subir" (click)="moverPaso(i, -1)">↑</button>
-                <button class="btn-icon" title="Bajar" (click)="moverPaso(i, 1)">↓</button>
-                <button class="btn-icon btn-icon-eliminar" title="Eliminar" (click)="borrarPaso(i)">×</button>
+                <button class="btn-icon" title="Subir" (click)="moverPaso(i, -1)">
+                  <animated-icons
+                    src="assets/icons/upload-minimalistic-ff77881b.json"
+                    trigger="loop"
+                    attributes='{"variationThumbColour":"#333333","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#333333","group-2":"#333333","background":"#FFFFFF"}}'
+                    height="16" width="16" style="display:inline-block;vertical-align:middle;"></animated-icons>
+                </button>
+                <button class="btn-icon" title="Bajar" (click)="moverPaso(i, 1)">
+                  <animated-icons
+                    src="assets/icons/download-minimalistic-ff77881b.json"
+                    trigger="loop"
+                    attributes='{"variationThumbColour":"#333333","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#333333","group-2":"#333333","background":"#FFFFFF"}}'
+                    height="16" width="16" style="display:inline-block;vertical-align:middle;"></animated-icons>
+                </button>
+                <button class="btn-icon btn-icon-eliminar" title="Eliminar" (click)="borrarPaso(i)">
+                  <animated-icons
+                    src="assets/icons/delete-minimalistic-926b8ba3.json"
+                    trigger="loop"
+                    attributes='{"variationThumbColour":"#d32f2f","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#d32f2f","group-2":"#d32f2f","background":"#FFFFFF"}}'
+                    height="16" width="16" style="display:inline-block;vertical-align:middle;"></animated-icons>
+                </button>
               </div>
             </ng-container>
             <ng-template #sinPasos>
@@ -187,12 +258,29 @@
             </ng-template>
           </div>
 
-          <div class="motor-seq-name-row" style="flex-shrink:0;">
-            <input class="filtro-input" [(ngModel)]="nombreSecuencia" placeholder="Nombre de la secuencia…" />
+          <div class="motor-seq-name-row" style="flex-shrink:0; align-items:center; justify-content:center;">
+            <input style="text-align: center;" class="filtro-input" [(ngModel)]="nombreSecuencia"
+              placeholder="Nombre de la secuencia…" />
           </div>
-          <div class="motor-seq-name-row" style="flex-shrink:0;">
-            <button class="btn-guardar" (click)="guardarSecuencia()">{{ editandoId ? 'Guardar cambios' : 'Guardar' }}</button>
-            <button class="btn-cancelar" (click)="limpiarSecuencia()">Limpiar pasos</button>
+          <div class="motor-seq-name-row" style="flex-shrink:0; align-items:center; justify-content:center;">
+            <button class="btn-guardar" (click)="guardarSecuencia()"
+              style="display:inline-flex;align-items:center;gap:6px;">
+              <animated-icons
+                src="assets/icons/save-minimalistic-ff77881b.json"
+                trigger="loop"
+                attributes='{"variationThumbColour":"#111111","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#111111","group-2":"#111111","background":"#FFFFFF"}}'
+                height="25" width="25" style="display:inline-block;vertical-align:middle;"></animated-icons>
+              <span>{{ editandoId ? 'Guardar cambios' : 'Guardar' }}</span>
+            </button>
+            <button class="btn-cancelar" (click)="limpiarSecuencia()"
+              style="display:inline-flex;align-items:center;justify-content:center;gap:6px;">
+              <animated-icons
+                src="assets/icons/delete-minimalistic-926b8ba3.json"
+                trigger="loop"
+                attributes='{"variationThumbColour":"#d32f2f","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#d32f2f","group-2":"#d32f2f","background":"#FFFFFF"}}'
+                height="16" width="16" style="display:inline-block;vertical-align:middle;"></animated-icons>
+              <span>Limpiar pasos</span>
+            </button>
           </div>
 
         </ng-container>

@@ -17,52 +17,92 @@
 
   <div class="sidebar-nav">
     <span class="sidebar-section-label">Operación</span>
-    <a routerLink="/dashboard" class="sidebar-link" [class.active]="isActive('/dashboard')" (click)="closeMobile()">
-      <img src="assets/images/DashB.png" alt="" /><span>Dashboard</span>
+    <a routerLink="/dashboard" class="sidebar-link" title="Dashboard" [class.active]="isActive('/dashboard')" (click)="closeMobile()">
+      <animated-icons
+        src="assets/icons/analytics-minimalistic-8467715e.json"
+        trigger="loop"
+        attributes='{"variationThumbColour":"#000000","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#FFFFFFFF","group-2":"#000000","background":"#1B1B1BFF"}}'
+        height="35" width="35"></animated-icons>
+      <span>Dashboard</span>
     </a>
-    <a routerLink="/cajones" class="sidebar-link" [class.active]="isActive('/cajones')" (click)="closeMobile()">
-      <img src="assets/images/CajonPB.png" alt="" /><span>Cajones</span>
+    <a routerLink="/cajones" class="sidebar-link" title="Cajones" [class.active]="isActive('/cajones')" (click)="closeMobile()">
+      <animated-icons
+        src="assets/icons/car-minimalistic-8467715e.json"
+        trigger="loop"
+        attributes='{"variationThumbColour":"#000000","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#FFFFFFFF","group-2":"#000000","background":"#1B1B1BFF"}}'
+        height="35" width="35"></animated-icons>
+      <span>Cajones</span>
     </a>
-    <a routerLink="/control-motores" class="sidebar-link" [class.active]="isActive('/control-motores')" (click)="closeMobile()">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-        stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="3" />
-        <path
-          d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-      </svg>
+    <a routerLink="/control-motores" class="sidebar-link" title="Control de Motores" [class.active]="isActive('/control-motores')"
+      (click)="closeMobile()">
+      <animated-icons
+        src="assets/icons/setup-minimalistic-dca75500.json"
+        trigger="loop"
+        attributes='{"variationThumbColour":"#000000","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#FFFFFFFF","group-2":"#000000","background":"#1B1B1BFF"}}'
+        height="35" width="35"></animated-icons>
       <span>Control de Motores</span>
     </a>
-    <a routerLink="/horarios" class="sidebar-link" [class.active]="isActive('/horarios')" (click)="closeMobile()">
-      <img src="assets/images/RelojB.png" alt="" /><span>Horarios</span>
+    <a routerLink="/horarios" class="sidebar-link" title="Horarios" [class.active]="isActive('/horarios')" (click)="closeMobile()">
+      <animated-icons
+        src="assets/icons/time-minimalistic-dca75500.json"
+        trigger="loop"
+        attributes='{"variationThumbColour":"#000000","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#FFFFFFFF","group-2":"#000000","background":"#1B1B1BFF"}}'
+        height="35" width="35"></animated-icons>
+      <span>Horarios</span>
     </a>
 
     <span class="sidebar-section-label">Gestión</span>
-    <a routerLink="/pagos" class="sidebar-link" [class.active]="isActive('/pagos')" (click)="closeMobile()">
-      <img src="assets/images/Pago.png" alt="" /><span>Pagos</span>
+    <a routerLink="/pagos" class="sidebar-link" title="Pagos" [class.active]="isActive('/pagos')" (click)="closeMobile()">
+      <animated-icons
+        src="assets/icons/income-minimalistic-dca75500.json"
+        trigger="loop"
+        attributes='{"variationThumbColour":"#000000","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#FFFFFFFF","group-2":"#000000","background":"#1B1B1BFF"}}'
+        height="35" width="35"></animated-icons>
+      <span>Pagos</span>
     </a>
-    <a routerLink="/clientes" class="sidebar-link" [class.active]="isActive('/clientes')" (click)="closeMobile()">
-      <img src="assets/images/UsuarioD.png" alt="" /><span>Clientes</span>
+    <a routerLink="/clientes" class="sidebar-link" title="Clientes" [class.active]="isActive('/clientes')" (click)="closeMobile()">
+      <animated-icons
+        src="assets/icons/team-minimalistic-dca75500.json"
+        trigger="loop"
+        attributes='{"variationThumbColour":"#000000","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#FFFFFFFF","group-2":"#000000","background":"#1B1B1BFF"}}'
+        height="35" width="35"></animated-icons>
+      <span>Clientes</span>
     </a>
-    <a routerLink="/usuarios" class="sidebar-link" [class.active]="isActive('/usuarios')" (click)="closeMobile()">
-      <img src="assets/images/UsuarioD.png" alt="" /><span>Usuarios</span>
+    <a routerLink="/usuarios" class="sidebar-link" title="Usuarios" [class.active]="isActive('/usuarios')" (click)="closeMobile()">
+      <animated-icons
+        src="assets/icons/user-profile-minimalistic-dca75500.json"
+        trigger="loop"
+        attributes='{"variationThumbColour":"#000000","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#FFFFFFFF","group-2":"#000000","background":"#1B1B1BFF"}}'
+        height="35" width="35"></animated-icons>
+      <span>Usuarios</span>
     </a>
-    <a routerLink="/reportes" class="sidebar-link" [class.active]="isActive('/reportes')" (click)="closeMobile()">
-      <img src="assets/images/GraficoB.png" alt="" /><span>Reportes y Analítica</span>
+    <a routerLink="/reportes" class="sidebar-link" title="Reportes y Analítica" [class.active]="isActive('/reportes')" (click)="closeMobile()">
+      <animated-icons
+        src="assets/icons/report-v2-minimalistic-dca75500.json"
+        trigger="loop"
+        attributes='{"variationThumbColour":"#000000","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#FFFFFFFF","group-2":"#000000","background":"#1B1B1BFF"}}'
+        height="35" width="35"></animated-icons>
+      <span>Reportes y Analítica</span>
     </a>
 
     <span class="sidebar-section-label">Sistema</span>
-    <a routerLink="/sustentabilidad" class="sidebar-link" [class.active]="isActive('/sustentabilidad')" (click)="closeMobile()">
-      <img src="assets/images/SosteB.png" alt="" /><span>Sustentabilidad</span>
+    <a routerLink="/sustentabilidad" class="sidebar-link" title="Sustentabilidad" [class.active]="isActive('/sustentabilidad')"
+      (click)="closeMobile()">
+      <animated-icons
+        src="assets/icons/sustainability-minimalistic-dca75500.json"
+        trigger="loop"
+        attributes='{"variationThumbColour":"#000000","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#FFFFFFFF","group-2":"#FFFFFFFF","background":"#1B1B1BFF"}}'
+        height="35" width="35"></animated-icons>
+      <span>Sustentabilidad</span>
     </a>
   </div>
 
   <button class="sidebar-logout" (click)="onLogout()" title="Cerrar sesión">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-      stroke-linecap="round" stroke-linejoin="round">
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-      <polyline points="16 17 21 12 16 7" />
-      <line x1="21" y1="12" x2="9" y2="12" />
-    </svg>
+    <animated-icons
+      src="assets/icons/exit-minimalistic-dca75500.json"
+      trigger="loop"
+      attributes='{"variationThumbColour":"#000000","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#FFFFFFFF","group-2":"#FFFFFFFF","background":"#1B1B1BFF"}}'
+      height="35" width="35"></animated-icons>
     <span>Salir</span>
   </button>
 </nav>
