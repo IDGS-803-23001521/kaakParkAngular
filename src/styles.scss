@@ -1607,7 +1607,7 @@ body { font-family: var(--font-sans); background: var(--dark); color: #fff; min-
 .motor-grid-fixed {
   flex: 1;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   grid-template-rows: repeat(2, max-content);
   align-content: space-evenly;
   gap: 12px;
