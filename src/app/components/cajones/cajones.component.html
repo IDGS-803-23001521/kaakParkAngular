@@ -120,7 +120,7 @@
                     [class.inactivo]="cj.estado==='Ocupado'" (click)="ocupar(cj)" style="display:inline-flex;align-items:center;gap:6px;">
                     <animated-icons
                       src="assets/icons/open-door-minimalistic-ff77881b.json"
-                      trigger="loop"
+                      trigger="loop-on-hover"
                       attributes='{"variationThumbColour":"#C9A227","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#C9A227","group-2":"#C9A227","background":"#FFFFFF"}}'
                       height="16" width="16" style="display:inline-block;vertical-align:middle;"></animated-icons>
                     <span>Ocupar</span>
@@ -129,7 +129,7 @@
                     [class.inactivo]="cj.estado!=='Ocupado'" (click)="desocupar(cj)" style="display:inline-flex;align-items:center;gap:6px;">
                     <animated-icons
                       src="assets/icons/exit-minimalistic-325dddb6.json"
-                      trigger="loop"
+                      trigger="loop-on-hover"
                       attributes='{"variationThumbColour":"#2e7d32","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#2e7d32","group-2":"#2e7d32","background":"#FFFFFF"}}'
                       height="16" width="16" style="display:inline-block;vertical-align:middle;"></animated-icons>
                     <span>Desocupar</span>
@@ -139,7 +139,7 @@
                     (click)="toggleMantenimiento(cj)" style="display:inline-flex;align-items:center;gap:6px;">
                     <animated-icons
                       src="assets/icons/setup-minimalistic-ff77881b.json"
-                      trigger="loop"
+                      trigger="loop-on-hover"
                       attributes='{"variationThumbColour":"#8a6e00","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#8a6e00","group-2":"#8a6e00","background":"#FFFFFF"}}'
                       height="16" width="16" style="display:inline-block;vertical-align:middle;"></animated-icons>
                     <span>{{cj.estado==='Mantenimiento' ? '↩ Reactivar' : 'Mant.'}}</span>
