@@ -205,15 +205,31 @@ export class ControlMotoresComponent implements OnInit, OnDestroy {
     this.toast(`Editando "${s.nombre}"`, 'info');
   }
 
-  async eliminarSecuencia(s: Secuencia): Promise<void> {
-    if (!s.id) return;
-    if (!confirm(`¿Eliminar la secuencia "${s.nombre}"?`)) return;
+  mostrarConfirmEliminar = false;
+  secuenciaAEliminar: Secuencia | null = null;
+
+  solicitarEliminarSecuencia(s: Secuencia): void {
+    this.secuenciaAEliminar = s;
+    this.mostrarConfirmEliminar = true;
+  }
+
+  cancelarEliminarSecuencia(): void {
+    this.secuenciaAEliminar = null;
+    this.mostrarConfirmEliminar = false;
+  }
+
+  async confirmarEliminarSecuencia(): Promise<void> {
+    const s = this.secuenciaAEliminar;
+    if (!s || !s.id) return;
     try {
       await this.fb.updateSecuencia(s.id, { eliminado: true });
       this.toast(`"${s.nombre}" eliminada`, 'ok');
       if (this.robot.estado$.value?.online) this.robot.eliminarSecuencia(s.nombre).catch(() => { });
     } catch {
       this.toast('Error al eliminar', 'err');
+    } finally {
+      this.mostrarConfirmEliminar = false;
+      this.secuenciaAEliminar = null;
     }
   }
 

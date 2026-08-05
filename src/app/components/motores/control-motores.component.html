@@ -13,7 +13,11 @@
         <button class="btn-guardar" (click)="conectar()">Conectar</button>
       </div>
       <div class="motor-exec-banner" *ngIf="$any(estado$ | async)?.ejecutando">
-        <span class="motor-spin">⟳</span> Ejecutando secuencia…
+        <span class="motor-spin"><animated-icons
+            src="assets/icons/reload-minimalistic-68399f80.json"
+            trigger="loop"
+            attributes='{"variationThumbColour":"#FFFFFF","variationName":"Normal","variationNumber":1,"numberOfGroups":1,"backgroundIsGroup":false,"strokeWidth":1.5,"defaultColours":{"group-1":"#000000","background":"#FFFFFF"}}'
+            height="20" width="20"></animated-icons></span> Ejecutando secuencia…
       </div>
     </div>
 
@@ -23,8 +27,6 @@
       <div class="card-kaak motor-panel-left-fixed">
         <div class="motor-panel-left-head">
           <h5>Control manual</h5>
-        </div>
-        <div class="motor-panel-left-head">
           <button class="btn-eliminar-confirm motor-stop-all-inline" (click)="pararTodo()">PARAR TODO</button>
         </div>
 
@@ -41,9 +43,7 @@
             <div class="motor-card-actions">
               <button class="btn-guardar" [disabled]="ocupado" (click)="enviarComando('P1')">▶ Mover</button>
               <button class="btn-icon motor-add-mini" title="Agregar a la secuencia" (click)="agregarDesdeMotor('P1')">
-                <animated-icons
-                  src="assets/icons/plus-minimalistic-ff77881b.json"
-                  trigger="loop-on-hover"
+                <animated-icons src="assets/icons/plus-minimalistic-ff77881b.json" trigger="loop-on-hover"
                   attributes='{"variationThumbColour":"#8a6e00","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#8a6e00","group-2":"#8a6e00","background":"#FFFFFF"}}'
                   height="25" width="25" style="display:inline-block;vertical-align:middle;"></animated-icons>
               </button>
@@ -61,9 +61,7 @@
             <div class="motor-card-actions">
               <button class="btn-guardar" [disabled]="ocupado" (click)="enviarComando('P2')">▶ Mover</button>
               <button class="btn-icon motor-add-mini" title="Agregar a la secuencia" (click)="agregarDesdeMotor('P2')">
-                <animated-icons
-                  src="assets/icons/plus-minimalistic-ff77881b.json"
-                  trigger="loop-on-hover"
+                <animated-icons src="assets/icons/plus-minimalistic-ff77881b.json" trigger="loop-on-hover"
                   attributes='{"variationThumbColour":"#8a6e00","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#8a6e00","group-2":"#8a6e00","background":"#FFFFFF"}}'
                   height="25" width="25" style="display:inline-block;vertical-align:middle;"></animated-icons>
               </button>
@@ -81,9 +79,7 @@
             <div class="motor-card-actions">
               <button class="btn-guardar" [disabled]="ocupado" (click)="enviarComando('P3')">▶ Mover</button>
               <button class="btn-icon motor-add-mini" title="Agregar a la secuencia" (click)="agregarDesdeMotor('P3')">
-                <animated-icons
-                  src="assets/icons/plus-minimalistic-ff77881b.json"
-                  trigger="loop-on-hover"
+                <animated-icons src="assets/icons/plus-minimalistic-ff77881b.json" trigger="loop-on-hover"
                   attributes='{"variationThumbColour":"#8a6e00","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#8a6e00","group-2":"#8a6e00","background":"#FFFFFF"}}'
                   height="25" width="25" style="display:inline-block;vertical-align:middle;"></animated-icons>
               </button>
@@ -101,9 +97,7 @@
             <div class="motor-card-actions">
               <button class="btn-guardar" [disabled]="ocupado" (click)="enviarComando('P4')">▶ Mover</button>
               <button class="btn-icon motor-add-mini" title="Agregar a la secuencia" (click)="agregarDesdeMotor('P4')">
-                <animated-icons
-                  src="assets/icons/plus-minimalistic-ff77881b.json"
-                  trigger="loop-on-hover"
+                <animated-icons src="assets/icons/plus-minimalistic-ff77881b.json" trigger="loop-on-hover"
                   attributes='{"variationThumbColour":"#8a6e00","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#8a6e00","group-2":"#8a6e00","background":"#FFFFFF"}}'
                   height="25" width="25" style="display:inline-block;vertical-align:middle;"></animated-icons>
               </button>
@@ -116,23 +110,21 @@
       <!-- Panel derecho: mismo div, cambia entre LISTA y EDITOR -->
       <div class="card-kaak motor-panel-right card-scroll">
 
-        <div class="motor-panel-toggle" *ngIf="modoPanel === 'lista'">
+        <div class="motor-panel-left-head" *ngIf="modoPanel === 'lista'">
           <h5>Secuencias guardadas</h5>
-        </div>
-        <div class="motor-panel-toggle" *ngIf="modoPanel === 'lista'">
           <button class="btn-guardar motor-nueva-btn" (click)="nuevaSecuencia()">
-            <animated-icons
-                  src="assets/icons/plus-minimalistic-ff77881b.json"
-                  trigger="loop"
-                  attributes='{"variationThumbColour":"#8a6e00","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#8a6e00","group-2":"#8a6e00","background":"#FFFFFF"}}'
-                  height="25" width="25" style="display:inline-block;vertical-align:middle;"></animated-icons>
-              Nueva secuencia</button>
+            <animated-icons src="assets/icons/plus-minimalistic-ff77881b.json" trigger="loop"
+              attributes='{"variationThumbColour":"#8a6e00","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#8a6e00","group-2":"#8a6e00","background":"#FFFFFF"}}'
+              height="25" width="25" style="display:inline-block;vertical-align:middle;"></animated-icons>
+            Nueva secuencia</button>
         </div>
-        <div class="motor-panel-toggle" *ngIf="modoPanel === 'editor'">
+        <div class="motor-panel-left-head" *ngIf="modoPanel === 'editor'">
           <h5>{{ editandoId ? 'Editar secuencia' : 'Nueva secuencia' }}</h5>
-        </div>
-        <div class="motor-panel-toggle" *ngIf="modoPanel === 'editor'">
-          <button class="btn-cancelar motor-volver-btn" (click)="volverALista()">← Volver a la lista</button>
+          <button class="btn-cancelar motor-volver-btn" (click)="volverALista()"><animated-icons
+              src="assets/icons/back-minimalistic-7a22709d.json"
+              trigger="loop"
+              attributes='{"variationThumbColour":"#FFFFFF","variationName":"Normal","variationNumber":1,"numberOfGroups":1,"backgroundIsGroup":false,"strokeWidth":1.5,"defaultColours":{"group-1":"#000000","background":"#FFFFFF"}}'
+              height="25" width="25"></animated-icons>Volver a la lista</button>
         </div>
 
         <!-- VISTA LISTA -->
@@ -147,25 +139,19 @@
               <div class="motor-seq-count">{{ s.pasos.length }} paso{{ s.pasos.length !== 1 ? 's' : '' }}</div>
             </div>
             <button class="btn-icon" title="Ejecutar" [disabled]="ocupado" (click)="ejecutarSecuencia(s)">
-              <animated-icons
-                src="assets/icons/play-minimalistic-ff77881b.json"
-                trigger="loop-on-hover"
+              <animated-icons src="assets/icons/play-minimalistic-ff77881b.json" trigger="loop-on-hover"
                 attributes='{"variationThumbColour":"#2e7d32","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#2e7d32","group-2":"#2e7d32","background":"#FFFFFF"}}'
                 height="20" width="20" style="display:inline-block;vertical-align:middle;"></animated-icons>
             </button>
             <button class="btn-icon" title="Editar" (click)="editarSecuencia(s)">
-              <animated-icons
-                src="assets/icons/edit-minimalistic-bef79568.json"
-                trigger="loop-on-hover"
+              <animated-icons src="assets/icons/edit-minimalistic-bef79568.json" trigger="loop-on-hover"
                 attributes='{"variationThumbColour":"#000000","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#333333","group-2":"#000000","background":"#FFFFFF"}}'
                 height="20" width="20" style="display:inline-block;vertical-align:middle;"></animated-icons>
             </button>
-            <button class="btn-icon btn-icon-eliminar" title="Eliminar" (click)="eliminarSecuencia(s)">
-              <animated-icons
-                src="assets/icons/delete-minimalistic-926b8ba3.json"
-                trigger="loop-on-hover"
+            <button class="btn-icon btn-icon-eliminar" title="Eliminar" (click)="solicitarEliminarSecuencia(s)">
+              <animated-icons src="assets/icons/delete-minimalistic-926b8ba3.json" trigger="loop-on-hover"
                 attributes='{"variationThumbColour":"#d32f2f","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#d32f2f","group-2":"#d32f2f","background":"#FFFFFF"}}'
-              height="20" width="20" style="display:inline-block;vertical-align:middle;"></animated-icons>
+                height="20" width="20" style="display:inline-block;vertical-align:middle;"></animated-icons>
             </button>
           </div>
         </div>
@@ -177,7 +163,10 @@
             <span class="motor-especiales-label">Esperar</span>
             <input class="filtro-input" type="number" [(ngModel)]="esperarMs" />
             <span class="motor-add-unidad">ms</span>
-            <button class="btn-icon motor-add-mini" title="Agregar espera" (click)="agregarEsperar()">+</button>
+            <button class="btn-icon motor-add-mini" title="Agregar espera" (click)="agregarEsperar()"><animated-icons
+                src="assets/icons/plus-minimalistic-ff77881b.json" trigger="loop-on-hover"
+                attributes='{"variationThumbColour":"#8a6e00","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#8a6e00","group-2":"#8a6e00","background":"#FFFFFF"}}'
+                height="25" width="25" style="display:inline-block;vertical-align:middle;"></animated-icons></button>
           </div>
 
           <div class="card-scroll-body">
@@ -188,20 +177,37 @@
 
                 <ng-container [ngSwitch]="tipoCampo(p)">
                   <div class="motor-step-fields" *ngSwitchCase="'stepper'">
-                    <input class="filtro-input motor-step-num-input" type="number" [(ngModel)]="p.valor" />
+                    <input class="filtro-input motor-step-num-input" type="number" [(ngModel)]="p.valor"
+                      placeholder="pasos" />
                     <span class="motor-step-unit">pasos</span>
-                    <input class="filtro-input motor-step-num-input" type="number" [(ngModel)]="p.velocidad" />
+                    <input class="filtro-input motor-step-num-input" type="number" [(ngModel)]="p.velocidad"
+                      placeholder="µs" />
                     <span class="motor-step-unit">µs</span>
                   </div>
                   <div class="motor-step-fields" *ngSwitchCase="'espera'">
-                    <input class="filtro-input motor-step-num-input" type="number" [(ngModel)]="p.valor" />
+                    <input class="filtro-input motor-step-num-input" type="number" [(ngModel)]="p.valor"
+                      placeholder="ms" />
                     <span class="motor-step-unit">ms</span>
                   </div>
                 </ng-container>
 
-                <button class="btn-icon" title="Subir" (click)="moverPaso(i, -1)">↑</button>
-                <button class="btn-icon" title="Bajar" (click)="moverPaso(i, 1)">↓</button>
-                <button class="btn-icon btn-icon-eliminar" title="Eliminar" (click)="borrarPaso(i)">×</button>
+                <div class="motor-step-actions">
+                  <button class="btn-icon" title="Subir" (click)="moverPaso(i, -1)"><animated-icons
+                      src="assets/icons/upload-minimalistic-ff77881b.json"
+                      trigger="loop-on-hover"
+                      attributes='{"variationThumbColour":"#000000","variationName":"Two Tone","variationNumber":2,"numberOfGroups":2,"backgroundIsGroup":false,"strokeWidth":1.5,"defaultColours":{"group-1":"#000000","group-2":"#000000","background":"#FFFFFF"}}'
+                      height="20" width="20"></animated-icons></button>
+                  <button class="btn-icon" title="Bajar" (click)="moverPaso(i, 1)"><animated-icons
+                      src="assets/icons/download-minimalistic-ff77881b.json"
+                      trigger="loop-on-hover"
+                      attributes='{"variationThumbColour":"#000000","variationName":"Two Tone","variationNumber":2,"numberOfGroups":2,"backgroundIsGroup":false,"strokeWidth":1.5,"defaultColours":{"group-1":"#000000","group-2":"#000000","background":"#FFFFFF"}}'
+                      height="20" width="20"></animated-icons></button>
+                  <button class="btn-icon btn-icon-eliminar" title="Eliminar" (click)="borrarPaso(i)"><animated-icons
+                      src="assets/icons/error-minimalistic-325dddb6.json" trigger="loop-on-hover"
+                      attributes='{"variationThumbColour":"#d32f2f","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#d32f2f","group-2":"#d32f2f","background":"#FFFFFF"}}'
+                      height="20" width="20"
+                      style="display:inline-block;vertical-align:middle;"></animated-icons></button>
+                </div>
               </div>
             </ng-container>
             <ng-template #sinPasos>
@@ -209,12 +215,21 @@
             </ng-template>
           </div>
 
-          <div class="motor-seq-name-row" style="flex-shrink:0;">
-            <input class="filtro-input" [(ngModel)]="nombreSecuencia" placeholder="Nombre de la secuencia…" />
+          <div class="motor-seq-name-row" style="flex-shrink:0; align-items: center; text-align: center;">
+            <input style="text-align: center;" class="filtro-input" [(ngModel)]="nombreSecuencia"
+              placeholder="Nombre de la secuencia…" />
           </div>
-          <div class="motor-seq-name-row" style="flex-shrink:0;">
-            <button class="btn-guardar" (click)="guardarSecuencia()">{{ editandoId ? 'Guardar cambios' : 'Guardar' }}</button>
-            <button class="btn-cancelar" (click)="limpiarSecuencia()">Limpiar pasos</button>
+          <div class="motor-seq-name-row" style="flex-shrink:0; align-items: center;">
+            <button class="btn-guardar" (click)="guardarSecuencia()"><animated-icons
+                src="assets/icons/save-minimalistic-ff77881b.json" trigger="loop"
+                attributes='{"variationThumbColour":"#111111","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#111111","group-2":"#111111","background":"#FFFFFF"}}'
+                height="25" width="25" style="display:inline-block;vertical-align:middle;"></animated-icons>{{
+              editandoId ? 'Guardar cambios' : 'Guardar' }}</button>
+            <button class="btn-cancelar" (click)="limpiarSecuencia()"><animated-icons
+                src="assets/icons/remove-filter-minimalistic-325dddb6.json"
+                trigger="loop"
+                attributes='{"variationThumbColour":"#FFFFFF","variationName":"Normal","variationNumber":1,"numberOfGroups":1,"backgroundIsGroup":false,"strokeWidth":1,"defaultColours":{"group-1":"#000000","background":"#FFFFFF"}}'
+                height="25" width="25"></animated-icons>Limpiar pasos</button>
           </div>
 
         </ng-container>
@@ -229,4 +244,27 @@
 <div class="motor-toast" [class.show]="toastVisible" [class.ok]="toastTipo==='ok'" [class.err]="toastTipo==='err'"
   [class.info]="toastTipo==='info'">
   {{ toastMsg }}
+</div>
+
+<!-- MODAL CONFIRMAR ELIMINACIÓN DE SECUENCIA -->
+<div *ngIf="mostrarConfirmEliminar" class="modal-overlay">
+  <div class="modal-card modal-confirm">
+    <div class="modal-confirm-icon">
+      <animated-icons src="assets/icons/delete-minimalistic-926b8ba3.json" trigger="loop"
+        attributes='{"variationThumbColour":"#d32f2f","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#d32f2f","group-2":"#d32f2f","background":"#FFFFFF"}}'
+        height="40" width="40" style="display:inline-block;vertical-align:middle;"></animated-icons>
+    </div>
+    <h5>¿Eliminar secuencia?</h5>
+    <p class="modal-sub" *ngIf="secuenciaAEliminar">
+      Estás por eliminar la secuencia <strong>"{{ secuenciaAEliminar.nombre }}"</strong>. Esta acción no podra
+      revertirse.
+    </p>
+    <div class="form-actions" style="justify-content:center; margin-top:1.25rem; display:flex; gap:10px;">
+      <button class="btn-cancelar" (click)="cancelarEliminarSecuencia()"
+        style="display:inline-flex;align-items:center;justify-content:center;gap:6px;">
+        <span>Cancelar</span>
+      </button>
+      <button class="btn-eliminar-confirm" (click)="confirmarEliminarSecuencia()">Sí, eliminar</button>
+    </div>
+  </div>
 </div>
