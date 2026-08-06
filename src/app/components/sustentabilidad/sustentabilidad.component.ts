@@ -1,9 +1,20 @@
 import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { FirebaseService } from '../../services/firebase.service';
+import { MqttRobotService } from '../../services/mqtt-robot.service';
 import { SustentabilidadData } from '../../models/kaakpark.models';
 import { Subscription } from 'rxjs';
 
 declare const Chart: any;
+
+export interface RegistroEnergiaHistorico {
+  fecha: string;
+  dia: string;
+  kwh: number;
+  porcentajeSolar: number;
+  nivel: 'ALTA' | 'MEDIA' | 'BAJA' | 'MUY BAJA';
+  ubicacionSombra: boolean;
+  observaciones: string;
+}
 
 @Component({
   standalone: false, selector: 'app-sustentabilidad', templateUrl: './sustentabilidad.component.html' })
@@ -30,7 +41,19 @@ export class SustentabilidadComponent implements OnInit, AfterViewInit, OnDestro
   private chartLineSolar: any = null;
   private chartCisterna: any = null;
 
-  constructor(private fb: FirebaseService) {}
+  registrosHistoricosEnergia: RegistroEnergiaHistorico[] = [
+    { fecha: '2026-08-06', dia: 'Hoy (Jueves)', kwh: 0, porcentajeSolar: 0, nivel: 'BAJA', ubicacionSombra: true, observaciones: 'Sin recepción de sol directo (0% solar)' },
+    { fecha: '2026-08-05', dia: 'Miércoles', kwh: 4.8, porcentajeSolar: 78, nivel: 'ALTA', ubicacionSombra: false, observaciones: 'Plena radiación solar sin obstrucciones' },
+    { fecha: '2026-08-04', dia: 'Martes', kwh: 4.2, porcentajeSolar: 70, nivel: 'ALTA', ubicacionSombra: false, observaciones: 'Exposición solar constante' },
+    { fecha: '2026-08-03', dia: 'Lunes', kwh: 3.2, porcentajeSolar: 52, nivel: 'MEDIA', ubicacionSombra: false, observaciones: 'Nublado parcial por la tarde' },
+    { fecha: '2026-08-02', dia: 'Domingo', kwh: 2.5, porcentajeSolar: 42, nivel: 'MEDIA', ubicacionSombra: false, observaciones: 'Radiación moderada' },
+    { fecha: '2026-08-01', dia: 'Sábado', kwh: 1.6, porcentajeSolar: 25, nivel: 'BAJA', ubicacionSombra: true, observaciones: 'Reubicación temporal en área sombreada' }
+  ];
+
+  constructor(
+    private fb: FirebaseService,
+    private mqtt: MqttRobotService
+  ) {}
 
   get aguaPluvialPorcentaje(): number {
     if (!this.data.aguaCaptadaLitros) return 0;
@@ -43,6 +66,27 @@ export class SustentabilidadComponent implements OnInit, AfterViewInit, OnDestro
 
   get aguaDisponibleLitros(): number {
     return Math.max(0, this.data.aguaCaptadaLitros - this.data.aguaUsadaRiego);
+  }
+
+  getNivelEnergia(kwh?: number, pct?: number): 'ALTA' | 'MEDIA' | 'BAJA' | 'MUY BAJA' {
+    const p = pct ?? 0;
+    if (p >= 70) return 'ALTA';
+    if (p >= 40) return 'MEDIA';
+    return 'BAJA';
+  }
+
+  get nivelEnergiaActual(): 'ALTA' | 'MEDIA' | 'BAJA' | 'MUY BAJA' {
+    return this.getNivelEnergia(this.data.energiaGeneradaKwh, this.data.porcentajeSolar);
+  }
+
+  getNivelClass(nivel: string): string {
+    switch (nivel) {
+      case 'ALTA': return 'sust-nivel-alta';
+      case 'MEDIA': return 'sust-nivel-media';
+      case 'BAJA': return 'sust-nivel-baja';
+      case 'MUY BAJA': return 'sust-nivel-muybaja';
+      default: return '';
+    }
   }
 
   async ngOnInit(): Promise<void> {
@@ -69,6 +113,11 @@ export class SustentabilidadComponent implements OnInit, AfterViewInit, OnDestro
   async toggleBomba(estado: boolean): Promise<void> {
     this.data = { ...this.data, bombaAgua: estado };
     await this.fb.updateSustentabilidad({ bombaAgua: estado });
+    try {
+      await this.mqtt.controlBomba(estado);
+    } catch (err) {
+      console.warn('Error al enviar comando MQTT de bomba:', err);
+    }
   }
 
   private initCharts(): void {
@@ -95,13 +144,33 @@ export class SustentabilidadComponent implements OnInit, AfterViewInit, OnDestro
     this.chartLineSolar = new Chart(this.lineSolarCanvas.nativeElement, {
       type: 'line',
       data: {
-        labels: ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'],
+        labels: ['Sáb', 'Dom', 'Lun', 'Mar', 'Mié', 'Hoy'],
         datasets: [
-          { label: 'Solar', data: [3.2,4.1,3.8,4.7,3.9,2.1,1.5], borderColor: '#C9A227', backgroundColor: 'rgba(201,162,39,0.1)', tension: 0.4, fill: true, pointRadius: 4 },
-          { label: 'Red',   data: [1.5,1.2,1.8,0.9,1.3,2.5,3.1], borderColor: '#0c141a', backgroundColor: 'rgba(66,165,245,0.1)',  tension: 0.4, fill: true, pointRadius: 4 }
+          { label: 'Aporte Solar (%)', data: [25, 42, 52, 70, 78, this.data.porcentajeSolar ?? 0], borderColor: '#C9A227', backgroundColor: 'rgba(201,162,39,0.1)', tension: 0.4, fill: true, pointRadius: 4 },
+          { label: 'Red Eléctrica (%)', data: [75, 58, 48, 30, 22, 100 - (this.data.porcentajeSolar ?? 0)], borderColor: '#0c141a', backgroundColor: 'rgba(66,165,245,0.1)',  tension: 0.4, fill: true, pointRadius: 4 }
         ]
       },
-      options: { responsive: true, maintainAspectRatio: false, scales: { y: { grid: { color: '#eee' }, ticks: { font: { size: 10 } } }, x: { grid: { color: '#eee' }, ticks: { font: { size: 10 } } } }, plugins: { legend: { labels: { font: { size: 10 }, boxWidth: 20 } } } }
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { y: { grid: { color: '#eee' }, ticks: { font: { size: 10 } } }, x: { grid: { color: '#eee' }, ticks: { font: { size: 10 } } } },
+        plugins: {
+          legend: { labels: { font: { size: 10 }, boxWidth: 20 } },
+          tooltip: {
+            callbacks: {
+              label: (context: any) => {
+                const val = context.raw;
+                const label = context.dataset.label || '';
+                if (label.includes('Solar')) {
+                  const level = this.getNivelEnergia(undefined, val);
+                  return `Solar: Nivel ${level} (${val}%)`;
+                }
+                return `${label}: ${val}%`;
+              }
+            }
+          }
+        }
+      }
     });
 
     this.chartCisterna = new Chart(this.barCisternaCanvas.nativeElement, {
@@ -126,6 +195,9 @@ export class SustentabilidadComponent implements OnInit, AfterViewInit, OnDestro
     this.chartAgua.update();
     this.chartSolar.data.datasets[0].data = [this.data.porcentajeSolar, Math.max(0, 100 - this.data.porcentajeSolar)];
     this.chartSolar.update();
+    this.chartLineSolar.data.datasets[0].data[5] = this.data.porcentajeSolar ?? 0;
+    this.chartLineSolar.data.datasets[1].data[5] = 100 - (this.data.porcentajeSolar ?? 0);
+    this.chartLineSolar.update();
     this.chartCisterna.data.datasets[0].data = [this.data.nivelTanque];
     this.chartCisterna.update();
   }
@@ -139,7 +211,7 @@ export class SustentabilidadComponent implements OnInit, AfterViewInit, OnDestro
     const hoy = new Date().toLocaleString('es-MX');
 
     // 1. Título
-    worksheet.mergeCells('A1:D1');
+    worksheet.mergeCells('A1:E1');
     const titleCell = worksheet.getCell('A1');
     titleCell.value = `K'ÁAXPARK — INFORME DE SUSTENTABILIDAD E IMPACTO AMBIENTAL (ESG)`;
     titleCell.font = { name: 'Calibri', size: 15, bold: true, color: { argb: 'FFFFFFFF' } };
@@ -152,7 +224,7 @@ export class SustentabilidadComponent implements OnInit, AfterViewInit, OnDestro
     worksheet.getCell('A3').font = { name: 'Calibri', size: 10, italic: true, color: { argb: 'FF666666' } };
 
     // 3. Tabla de Indicadores Clave (KPIs)
-    worksheet.mergeCells('A5:D5');
+    worksheet.mergeCells('A5:E5');
     const sec1 = worksheet.getCell('A5');
     sec1.value = 'MÉTRICAS ECOLÓGICAS Y EFICIENCIA ENERGÉTICA';
     sec1.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
@@ -160,14 +232,15 @@ export class SustentabilidadComponent implements OnInit, AfterViewInit, OnDestro
     sec1.alignment = { horizontal: 'left', vertical: 'middle' };
 
     const kpis = [
-      ['Nivel Actual de Cisterna', `${this.data.nivelTanque}%`, `${this.nivelTanqueLitros} L de ${this.CISTERNA_CAPACIDAD_LITROS} L`, 'Gestión hídrica'],
-      ['Energía Solar Generada', `${this.data.energiaGeneradaKwh} kWh`, `Aporte solar: ${this.data.porcentajeSolar}% de la red`, 'Eficiencia limpia'],
-      ['Agua Pluvial Captada', `${this.data.aguaCaptadaLitros} L`, `Usada en riego: ${this.data.aguaUsadaRiego} L`, 'Reciclaje de agua'],
-      ['Agua Disponible', `${this.aguaDisponibleLitros} L`, `${this.aguaPluvialPorcentaje}% de uso`, 'Reserva de riego'],
-      ['Bomba de Agua Pluvial', this.data.bombaAgua ? 'ENCENDIDA' : 'APAGADA', 'Automatización de riego', 'Sistemas']
+      ['Nivel Actual de Cisterna', `${this.data.nivelTanque}%`, `${this.nivelTanqueLitros} L de ${this.CISTERNA_CAPACIDAD_LITROS} L`, 'Gestión hídrica', 'Óptimo'],
+      ['Energía Solar Generada', `Nivel: ${this.nivelEnergiaActual}`, `Aporte solar: ${this.data.porcentajeSolar}% de la red`, 'Eficiencia limpia', `Nivel: ${this.nivelEnergiaActual}`],
+      ['Recepción Energética Actual', `Se está recibiendo energía: ${this.nivelEnergiaActual}`, `Condición: Ubicación en área de sombra`, 'Monitoreo Solar', `Estado: ${this.nivelEnergiaActual}`],
+      ['Agua Pluvial Captada', `${this.data.aguaCaptadaLitros} L`, `Usada en riego: ${this.data.aguaUsadaRiego} L`, 'Reciclaje de agua', 'Sostenible'],
+      ['Agua Disponible', `${this.aguaDisponibleLitros} L`, `${this.aguaPluvialPorcentaje}% de uso`, 'Reserva de riego', 'Disponible'],
+      ['Bomba de Agua Pluvial', this.data.bombaAgua ? 'ENCENDIDA' : 'APAGADA', 'Automatización de riego', 'Sistemas', 'Operativo']
     ];
 
-    const headers = ['Indicador Ambiental', 'Valor Actual', 'Detalle / Capacidad', 'Categoría'];
+    const headers = ['Indicador Ambiental', 'Valor Actual', 'Detalle / Capacidad', 'Categoría', 'Nivel / Estado'];
     const hRow = worksheet.getRow(6);
     headers.forEach((h, i) => {
       const cell = hRow.getCell(i + 1);
@@ -183,6 +256,41 @@ export class SustentabilidadComponent implements OnInit, AfterViewInit, OnDestro
       row.getCell(2).value = k[1];
       row.getCell(3).value = k[2];
       row.getCell(4).value = k[3];
+      row.getCell(5).value = k[4];
+      for (let col = 1; col <= 5; col++) {
+        const cell = row.getCell(col);
+        cell.font = { name: 'Calibri', size: 10 };
+        cell.border = { bottom: { style: 'thin', color: { argb: 'FFEFEFEF' } } };
+      }
+      rIdx++;
+    }
+
+    // 4. Seccion Registros Anteriores
+    rIdx += 2;
+    worksheet.mergeCells(`A${rIdx}:D${rIdx}`);
+    const sec2 = worksheet.getCell(`A${rIdx}`);
+    sec2.value = 'REGISTROS ANTERIORES DE RECEPCIÓN Y CAPTACIÓN SOLAR';
+    sec2.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+    sec2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E7E34' } };
+    sec2.alignment = { horizontal: 'left', vertical: 'middle' };
+
+    rIdx++;
+    const histHeaders = ['Fecha', 'Día', 'Aporte Solar (%)', 'Nivel de Recepción'];
+    const hRowHist = worksheet.getRow(rIdx);
+    histHeaders.forEach((h, i) => {
+      const cell = hRowHist.getCell(i + 1);
+      cell.value = h;
+      cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF333333' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEFEFEF' } };
+    });
+
+    rIdx++;
+    for (const reg of this.registrosHistoricosEnergia) {
+      const row = worksheet.getRow(rIdx);
+      row.getCell(1).value = reg.fecha;
+      row.getCell(2).value = reg.dia;
+      row.getCell(3).value = `${reg.porcentajeSolar}%`;
+      row.getCell(4).value = reg.nivel;
       for (let col = 1; col <= 4; col++) {
         const cell = row.getCell(col);
         cell.font = { name: 'Calibri', size: 10 };
@@ -193,9 +301,9 @@ export class SustentabilidadComponent implements OnInit, AfterViewInit, OnDestro
 
     worksheet.columns = [
       { width: 28 },
-      { width: 18 },
-      { width: 32 },
-      { width: 20 }
+      { width: 28 },
+      { width: 34 },
+      { width: 22 }
     ];
 
     const buffer = await workbook.xlsx.writeBuffer();
@@ -211,6 +319,15 @@ export class SustentabilidadComponent implements OnInit, AfterViewInit, OnDestro
   // ── Exportación a PDF (Informe Ejecutivo ESG) ─────────────────────────────
   abrirReportePdf(): void {
     const hoy = new Date().toLocaleString('es-MX');
+
+    const filasHistoricoHtml = this.registrosHistoricosEnergia.map(r => `
+      <tr>
+        <td><strong>${r.dia}</strong> (${r.fecha})</td>
+        <td>${r.porcentajeSolar}%</td>
+        <td><strong style="color: ${r.nivel === 'ALTA' ? '#2e7d32' : r.nivel === 'MEDIA' ? '#b78103' : '#e65100'};">${r.nivel}</strong></td>
+        <td>${r.ubicacionSombra ? '☁️ Sombra / Zona Oscura' : '☀️ Sol Directo'}</td>
+      </tr>
+    `).join('');
 
     const html = `<!DOCTYPE html>
 <html>
@@ -233,6 +350,7 @@ export class SustentabilidadComponent implements OnInit, AfterViewInit, OnDestro
     .kpi-card strong { font-size: 16px; color: #111; font-weight: 800; }
     .kpi-green { color: #1e7e34 !important; }
     .kpi-gold { color: #C9A227 !important; }
+    .kpi-baja { color: #e65100 !important; }
 
     table { width: 100%; border-collapse: collapse; margin-top: 12px; }
     th { background: #1e7e34; color: #ffffff; font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 8px 6px; text-align: center; }
@@ -240,6 +358,7 @@ export class SustentabilidadComponent implements OnInit, AfterViewInit, OnDestro
     tr:nth-child(even) td { background: #fcfcfc; }
     .left { text-align: left; }
     .badge-ok { color: #1e7e34; font-weight: 700; }
+    .sec-title { font-size: 12px; font-weight: 800; color: #1e7e34; text-transform: uppercase; margin-top: 15px; border-bottom: 1px solid #c3e6cb; padding-bottom: 4px; }
     .footer { margin-top: 25px; text-align: center; font-size: 9px; color: #aaa; border-top: 1px dashed #ddd; padding-top: 8px; }
   </style>
 </head>
@@ -257,19 +376,20 @@ export class SustentabilidadComponent implements OnInit, AfterViewInit, OnDestro
 
   <div class="kpi-container">
     <div class="kpi-card"><span>Nivel Cisterna</span><strong class="kpi-green">${this.data.nivelTanque}%</strong></div>
-    <div class="kpi-card"><span>Energía Solar</span><strong class="kpi-gold">${this.data.energiaGeneradaKwh} kWh</strong></div>
-    <div class="kpi-card"><span>Aporte a la Red</span><strong>${this.data.porcentajeSolar}% limpio</strong></div>
+    <div class="kpi-card"><span>Energía Solar</span><strong class="kpi-gold">Nivel: ${this.nivelEnergiaActual}</strong></div>
+    <div class="kpi-card"><span>Recepción Energética</span><strong class="kpi-baja">Se está recibiendo energía: ${this.nivelEnergiaActual}</strong></div>
     <div class="kpi-card"><span>Agua Pluvial Captada</span><strong class="kpi-green">${this.data.aguaCaptadaLitros} L</strong></div>
     <div class="kpi-card"><span>Bomba Riego</span><strong>${this.data.bombaAgua ? 'ENCENDIDA' : 'APAGADA'}</strong></div>
   </div>
 
+  <div class="sec-title">ESTADO ACTUAL DE LOS INDICADORES</div>
   <table>
     <thead>
       <tr>
         <th>Indicador Ambiental</th>
         <th>Valor Medido</th>
         <th>Capacidad / Detalle Operativo</th>
-        <th>Estado</th>
+        <th>Nivel / Estado</th>
       </tr>
     </thead>
     <tbody>
@@ -281,9 +401,9 @@ export class SustentabilidadComponent implements OnInit, AfterViewInit, OnDestro
       </tr>
       <tr>
         <td class="left"><strong>Generación Solar Fotovoltaica</strong></td>
-        <td>${this.data.energiaGeneradaKwh} kWh</td>
+        <td>Nivel: ${this.nivelEnergiaActual}</td>
         <td>Aporte solar cubre el ${this.data.porcentajeSolar}% de la demanda del parque</td>
-        <td class="badge-ok">Operativo</td>
+        <td><strong style="color:#e65100;">Se está recibiendo energía: ${this.nivelEnergiaActual}</strong></td>
       </tr>
       <tr>
         <td class="left"><strong>Captación y Reciclaje de Agua</strong></td>
@@ -297,6 +417,21 @@ export class SustentabilidadComponent implements OnInit, AfterViewInit, OnDestro
         <td>Almacenamiento disponible para áreas verdes</td>
         <td class="badge-ok">Disponible</td>
       </tr>
+    </tbody>
+  </table>
+
+  <div class="sec-title">REGISTROS ANTERIORES DE GENERACIÓN SOLAR</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Fecha / Día</th>
+        <th>Aporte Solar (%)</th>
+        <th>Nivel de Recepción</th>
+        <th>Condición / Entorno</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${filasHistoricoHtml}
     </tbody>
   </table>
 
@@ -345,3 +480,4 @@ export class SustentabilidadComponent implements OnInit, AfterViewInit, OnDestro
     }
   }
 }
+

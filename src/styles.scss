@@ -671,6 +671,68 @@ body { font-family: var(--font-sans); background: var(--dark); color: #fff; min-
 .sust-alertas-list { display: flex; flex-direction: column; gap: 4px; }
 .sust-alerta-item { font-size: 0.82rem; color: #8d4f00; }
 
+/* Niveles de Energía y Registros Históricos */
+.sust-nivel-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.sust-nivel-alta { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+.sust-nivel-media { background: #fff8e1; color: #b78103; border: 1px solid #ffe082; }
+.sust-nivel-baja { background: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
+.sust-nivel-muybaja { background: #fdeeec; color: #c0392b; border: 1px solid #f5c6c6; }
+
+.sust-nivel-meter {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+  height: 6px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #eee;
+}
+.sust-meter-step {
+  flex: 1;
+  background: #e0e0e0;
+  border-radius: 2px;
+  transition: background 0.3s ease;
+}
+.sust-meter-step.active-muybaja { background: #e74c3c; }
+.sust-meter-step.active-baja { background: #e67e22; }
+.sust-meter-step.active-media { background: #f39c12; }
+.sust-meter-step.active-alta { background: #2ecc71; }
+
+.sust-tabla-historico {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 0.8rem;
+}
+.sust-tabla-historico th {
+  background: #fafafa;
+  color: #777;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1.5px solid #eee;
+}
+.sust-tabla-historico td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #f5f5f5;
+  color: #333;
+}
+.sust-tabla-historico tr:hover td {
+  background: #fafafa;
+}
+
 @media (max-width: 1024px) {
   .sust-kpi-grid { grid-template-columns: 1fr 1fr; }
   .sust-body-grid { grid-template-columns: 1fr; }

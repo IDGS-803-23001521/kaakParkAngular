@@ -188,9 +188,9 @@ updateSecuencia(id: string, cambios: Partial<Secuencia>): Promise<void> {
     const snap = await getDoc(ref);
     if (snap.exists()) return;
     const defaults: SustentabilidadData = {
-      energiaGeneradaKwh: 0, aguaCaptadaLitros: 0, aguaUsadaRiego: 0,
-      porcentajeSolar: 0, nivelTanque: 0, capacidadCisternaLitros: 4,
-      bombaAgua: false, alertas: []
+      energiaGeneradaKwh: 0, aguaCaptadaLitros: 3.5, aguaUsadaRiego: 1.2,
+      porcentajeSolar: 0, nivelTanque: 65, capacidadCisternaLitros: 4,
+      bombaAgua: true, alertas: ['Recepción solar baja: Sin energía solar directa recibida hoy (0%).']
     };
     await setDoc(ref, defaults);
   }

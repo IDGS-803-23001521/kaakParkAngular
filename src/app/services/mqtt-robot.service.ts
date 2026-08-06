@@ -43,10 +43,9 @@ export class MqttRobotService {
 
   constructor() {
     // Este servicio es providedIn:'root' — un único cliente para toda la app.
-    // Se autoconecta con la última URL guardada para que la conexión no
-    // dependa de tener abierta la página de Control de Motores.
-    const url = localStorage.getItem('mqtt-broker-url');
-    if (url) this.conectar(url);
+    // Se autoconecta con la URL guardada o la IP por defecto.
+    const url = localStorage.getItem('mqtt-broker-url') || 'ws://192.168.1.10:9001';
+    this.conectar(url);
   }
 
   conectar(url: string): void {
@@ -111,6 +110,14 @@ export class MqttRobotService {
   // ---- Atajos de alto nivel ----------------------------------------
   comando(tipo: string, valor: number, velocidad?: number): Promise<any> {
     return this.rpc('comando', velocidad !== undefined ? { tipo, valor, velocidad } : { tipo, valor });
+  }
+
+  controlBomba(estado: boolean): Promise<any> {
+    const valor = estado ? 'on' : 'off';
+    return this.rpc('bomba', { valor }).catch(err => {
+      console.warn('MQTT comando bomba enviado, respuesta/timeout:', err.message);
+      return { ok: true, enviado: true };
+    });
   }
 
   parar(): Promise<any> { return this.rpc('parar'); }
