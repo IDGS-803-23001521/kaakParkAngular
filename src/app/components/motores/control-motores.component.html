@@ -171,7 +171,7 @@
 
           <div class="card-scroll-body">
             <ng-container *ngIf="pasos.length; else sinPasos">
-              <div class="motor-step-item motor-step-editable" *ngFor="let p of pasos; let i = index">
+              <div class="motor-step-item motor-step-editable" *ngFor="let p of pasos; let i = index; trackBy: trackByFn">
                 <span class="motor-step-num">{{ i + 1 }}</span>
                 <span class="motor-step-badge">{{ p.tipo }}</span>
 

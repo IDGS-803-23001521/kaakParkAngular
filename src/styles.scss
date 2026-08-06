@@ -1388,12 +1388,20 @@ body { font-family: var(--font-sans); background: var(--dark); color: #fff; min-
 .reportes-filtros-row select { width:100%; background:#f6f6f6; border:1.5px solid #e5e5e5; border-radius:9px; padding:10px 12px; font-size:0.85rem; color:#222; outline:none; transition:border-color .18s; }
 .reportes-filtros-row select:focus { border-color:var(--gold); background:#fff; }
 .pagos-btn-generar { display:block; width:100%; }
+
+.pagos-tendencia-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 .pagos-tendencia-chart {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 10px;
-  height: 155px;
+  flex: 1;
+  min-height: 180px;
   padding-top: 2.2rem;
   position: relative;
 }
@@ -1425,12 +1433,21 @@ body { font-family: var(--font-sans); background: var(--dark); color: #fff; min-
   }
 }
 
+.pagos-tendencia-barra-container {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: 0;
+}
+
 .pagos-tendencia-barra {
   width: 55%;
   min-height: 4px;
   background: linear-gradient(180deg, #e0bb4a, var(--gold));
   border-radius: 5px 5px 0 0;
-  transition: height .2s, background .2s, box-shadow .2s;
+  transition: height .25s ease-out, background .2s, box-shadow .2s;
 }
 
 .pagos-tendencia-mes {
@@ -1439,6 +1456,7 @@ body { font-family: var(--font-sans); background: var(--dark); color: #fff; min-
   margin-top: 8px;
   text-transform: uppercase;
   transition: color .2s;
+  flex-shrink: 0;
 }
 
 /* Tooltip emergente de tendencia de ingresos */

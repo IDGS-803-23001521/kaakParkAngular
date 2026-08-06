@@ -155,7 +155,13 @@ export class ControlMotoresComponent implements OnInit, OnDestroy {
   moverPaso(i: number, dir: number): void {
     const j = i + dir;
     if (j < 0 || j >= this.pasos.length) return;
-    [this.pasos[i], this.pasos[j]] = [this.pasos[j], this.pasos[i]];
+    const temp = { ...this.pasos[i] };
+    this.pasos[i] = { ...this.pasos[j] };
+    this.pasos[j] = temp;
+  }
+
+  trackByFn(index: number): number {
+    return index;
   }
 
   limpiarSecuencia(): void {

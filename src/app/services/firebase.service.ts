@@ -210,19 +210,43 @@ updateSecuencia(id: string, cambios: Partial<Secuencia>): Promise<void> {
   }
 
   async finalizarEstanciaAdmin(estanciaId: string, cajonId: string): Promise<void> {
-  const batch = writeBatch(this.db);
-  batch.update(doc(this.db, `estancias/${estanciaId}`), {
-    estatus: 'FINALIZADA',
-    estatusPago: 'PAGADA',
-    fechaSalida: Timestamp.now()
-  });
-  batch.update(doc(this.db, `cajones-dev/${cajonId}`), {
-    estado: 'Libre',
-    horaEntrada: '',
-    placa: ''
-  });
-  return batch.commit();
-}
+    const batch = writeBatch(this.db);
+    batch.update(doc(this.db, `estancias/${estanciaId}`), {
+      estatus: 'FINALIZADA',
+      estatusPago: 'PAGADA',
+      fechaSalida: Timestamp.now()
+    });
+    batch.update(doc(this.db, `${this.CAJONES_COL}/${cajonId}`), {
+      estado: 'Libre',
+      horaEntrada: '',
+      placa: ''
+    });
+    return batch.commit();
+  }
+
+  async finalizarEstanciaPorCajon(cajonId: string): Promise<void> {
+    try {
+      const q = query(
+        collection(this.db, 'estancias'),
+        where('cajonId', '==', cajonId)
+      );
+      const snap = await getDocs(q);
+      const activas = snap.docs.filter(d => d.get('estatus') !== 'FINALIZADA');
+      if (activas.length > 0) {
+        const batch = writeBatch(this.db);
+        activas.forEach(d => {
+          batch.update(d.ref, {
+            estatus: 'FINALIZADA',
+            estatusPago: 'PAGADA',
+            fechaSalida: Timestamp.now()
+          });
+        });
+        await batch.commit();
+      }
+    } catch (e) {
+      console.error('Error al finalizar estancia por cajon:', e);
+    }
+  }
 
 async fetchPasosSecuencia(secuenciaId: string): Promise<PasoSecuencia[]> {
   const snap = await getDoc(doc(this.db, `secuencias/${secuenciaId}`));

@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { FirebaseService } from '../../services/firebase.service';
-import { ActividadReciente, Cajon, Pago, ReporteHistorial, SustentabilidadData } from '../../models/kaakpark.models';
+import { ActividadReciente, Cajon, Pago, ReporteHistorial, SustentabilidadData, obtenerDuracionPago } from '../../models/kaakpark.models';
 import { Subscription } from 'rxjs';
 import { Secuencia } from '../../services/mqtt-robot.service';
 
@@ -121,8 +121,9 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
 
   get tiempoPromedioEstancia(): string {
     const duraciones = this.pagosPeriodo
-      .filter(p => p.estado === 'Completado' && p.duracionMin > 0)
-      .map(p => p.duracionMin);
+      .filter(p => p.estado === 'Completado')
+      .map(p => obtenerDuracionPago(p))
+      .filter(d => d > 0);
     if (!duraciones.length) return '—';
     const avg = Math.round(duraciones.reduce((s, m) => s + m, 0) / duraciones.length);
     return avg < 60 ? `${avg} min` : `${Math.floor(avg / 60)}h ${avg % 60}m`;
@@ -202,9 +203,12 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
     const completados = this.pagosPeriodo.filter(p => p.estado === 'Completado');
     const total = completados.length;
     if (!total) return [0, 0, 0];
-    const menosUna = completados.filter(p => p.duracionMin < 60).length;
-    const unaATres = completados.filter(p => p.duracionMin >= 60 && p.duracionMin < 180).length;
-    const masTres  = completados.filter(p => p.duracionMin >= 180).length;
+    const menosUna = completados.filter(p => obtenerDuracionPago(p) < 60).length;
+    const unaATres = completados.filter(p => {
+      const d = obtenerDuracionPago(p);
+      return d >= 60 && d < 180;
+    }).length;
+    const masTres  = completados.filter(p => obtenerDuracionPago(p) >= 180).length;
     return [
       Math.round(menosUna / total * 100),
       Math.round(unaATres / total * 100),

@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FirebaseService } from '../../services/firebase.service';
 import { MqttRobotService } from '../../services/mqtt-robot.service';
 import { AuthService } from '../../services/auth.service';
-import { ActividadReciente, Cajon, HistorialTarifa, Pago } from '../../models/kaakpark.models';
+import { ActividadReciente, Cajon, HistorialTarifa, Pago, obtenerDuracionPago, calcularMontoCobro, calcularMinutosEstacionado } from '../../models/kaakpark.models';
 import { Subscription } from 'rxjs';
 import * as XLSX from 'xlsx';
 
@@ -16,6 +16,7 @@ export class PagosComponent implements OnInit, OnDestroy {
   // ── Data ─────────────────────────────────────────────────────────────────
   cajones: Cajon[]              = [];
   pagos:   Pago[]               = [];
+  actividad: ActividadReciente[] = [];
   historialTarifas: HistorialTarifa[] = [];
   tiempoAhora = new Date();
 
@@ -33,6 +34,7 @@ export class PagosComponent implements OnInit, OnDestroy {
 
   // ── Formulario de pago nuevo ──────────────────────────────────────────────
   cajonSeleccionadoId = '';
+  horaEntradaManual = '';
   metodoPago: 'Efectivo' | 'Transferencia' | 'Tarjeta' = 'Efectivo';
   procesando = false;
 
@@ -69,13 +71,87 @@ export class PagosComponent implements OnInit, OnDestroy {
     return this.tendenciaMensual.some(t => t.monto > 0);
   }
 
+  onCajonSeleccionadoChange(cajonId: string): void {
+    this.cajonSeleccionadoId = cajonId;
+    const cj = this.cajones.find(c => c.id === cajonId);
+    if (cj) {
+      this.horaEntradaManual = this.getHoraEntradaCajon(cj) || '';
+    } else {
+      this.horaEntradaManual = '';
+    }
+  }
+
+  atenderPagoPendiente(pago: Pago): void {
+    this.cajonSeleccionadoId = pago.cajonId;
+    this.metodoPago = pago.metodo || 'Efectivo';
+    this.onCajonSeleccionadoChange(pago.cajonId);
+
+    setTimeout(() => {
+      const elem = document.getElementById('seccion-registrar-pago');
+      if (elem) {
+        elem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
+  }
+
+  getHoraEntradaCajon(cj?: Cajon): string {
+    if (!cj) return '';
+    // 1. Directamente en el objeto cajón
+    if (cj.horaEntrada && cj.horaEntrada !== '—') return cj.horaEntrada;
+
+    // 2. En pagos pendientes asociados a este cajón
+    const pagoPendiente = this.pagos.find(p => p.cajonId === cj.id && p.estado !== 'Completado');
+    if (pagoPendiente?.horaEntrada && pagoPendiente.horaEntrada !== '—') {
+      return pagoPendiente.horaEntrada;
+    }
+
+    // 3. En la actividad reciente (evento de entrada para este cajón o placa)
+    const actEntrada = this.actividad.find(a =>
+      a.tipo === 'entrada' && (
+        (a.descripcion && a.descripcion.includes(`Cajón ${cj.numeroCajon}`) && a.descripcion.includes(`Nivel ${cj.nivel}`)) ||
+        (cj.placa && a.placa && a.placa === cj.placa)
+      )
+    );
+    if (actEntrada?.hora && actEntrada.hora !== '—') {
+      return actEntrada.hora;
+    }
+
+    return '';
+  }
+
+  getPlacaCajon(cj?: Cajon): string {
+    if (!cj) return '—';
+    if (cj.placa && cj.placa !== '—') return cj.placa;
+
+    const pagoPendiente = this.pagos.find(p => p.cajonId === cj.id && p.placa && p.placa !== '—');
+    if (pagoPendiente?.placa) return pagoPendiente.placa;
+
+    const actEntrada = this.actividad.find(a =>
+      a.tipo === 'entrada' &&
+      a.descripcion && a.descripcion.includes(`Cajón ${cj.numeroCajon}`) && a.descripcion.includes(`Nivel ${cj.nivel}`) &&
+      a.placa && a.placa !== '—'
+    );
+    if (actEntrada?.placa) return actEntrada.placa;
+
+    return '—';
+  }
+
   get tiempoEstacionadoMin(): number {
     const cj = this.cajonSeleccionado;
-    if (!cj?.horaEntrada) return 0;
-    const [h, m] = cj.horaEntrada.split(':').map(Number);
-    const entrada = new Date(this.tiempoAhora);
-    entrada.setHours(h, m, 0, 0);
-    return Math.max(0, Math.round((this.tiempoAhora.getTime() - entrada.getTime()) / 60000));
+    if (!cj) return 0;
+    const horaEntrada = this.horaEntradaManual || this.getHoraEntradaCajon(cj);
+    return calcularMinutosEstacionado(horaEntrada, this.tiempoAhora);
+  }
+
+  getDuracionMin(pago: Pago | null | undefined): number {
+    return obtenerDuracionPago(pago);
+  }
+
+  getPagoMontoCalculado(pago: Pago | null | undefined): number {
+    if (!pago) return 0;
+    const mins = this.getDuracionMin(pago);
+    if (mins <= 0) return pago.monto || this.tarifaPorHora;
+    return calcularMontoCobro(mins, this.tarifaPorHora);
   }
 
   get tiempoTexto(): string {
@@ -83,8 +159,7 @@ export class PagosComponent implements OnInit, OnDestroy {
   }
 
   get montoCalculado(): number {
-    const mins = this.tiempoEstacionadoMin;
-    return Math.ceil(Math.max(1, Math.ceil(mins / 60))) * this.tarifaPorHora;
+    return calcularMontoCobro(this.tiempoEstacionadoMin, this.tarifaPorHora);
   }
 
   // ── Getter: pagos en espera de cobro en caja (iniciados desde la app) ─────
@@ -270,7 +345,7 @@ export class PagosComponent implements OnInit, OnDestroy {
         p.placa || '—',
         p.horaEntrada || '',
         p.horaSalida || '',
-        `${p.duracionMin || 0} min`,
+        `${this.getDuracionMin(p)} min`,
         p.metodo || '',
         `$${(p.monto || 0).toLocaleString('es-MX')}`,
         p.estado || ''
@@ -423,7 +498,7 @@ export class PagosComponent implements OnInit, OnDestroy {
           <td>${p.placa || '—'}</td>
           <td>${p.horaEntrada || ''}</td>
           <td>${p.horaSalida || ''}</td>
-          <td>${p.duracionMin || 0} min</td>
+          <td>${this.getDuracionMin(p)} min</td>
           <td>${p.metodo || ''}</td>
           <td class="monto">$${(p.monto || 0).toLocaleString('es-MX')}</td>
           <td class="${p.estado === 'Completado' ? 'badge-ok' : 'badge-pending'}">${p.estado || ''}</td>
@@ -542,6 +617,7 @@ export class PagosComponent implements OnInit, OnDestroy {
     this.subs.push(
       this.fb.getCajones().subscribe(cj => { this.cajones = cj.filter(c => c.nivel !== 4); }),
       this.fb.getPagos().subscribe(p => { this.pagos = p; }),
+      this.fb.getActividadReciente().subscribe(act => { this.actividad = act; }),
       this.fb.getTarifa().subscribe({
         next: cfg => {
           if (cfg?.tarifaPorHora) {
@@ -572,12 +648,22 @@ export class PagosComponent implements OnInit, OnDestroy {
         hour: '2-digit', minute: '2-digit', hour12: false
       });
       const fecha = ahora.toISOString().slice(0, 10);
+      const duracionReal = obtenerDuracionPago({ ...pago, horaSalida, timestamp: ahora.getTime() });
+      const montoReal = calcularMontoCobro(duracionReal, this.tarifaPorHora);
+
+      const cajon = this.cajones.find(c => c.id === pago.cajonId);
+      const placaValida = (pago.placa && pago.placa !== '—')
+        ? pago.placa
+        : (cajon ? this.getPlacaCajon(cajon) : '—');
 
       // 1. Marcar el pago como Completado (la app móvil detecta este cambio
       //    mediante su listener en tiempo real y muestra "vehículo en camino").
       await this.fb.updatePago(pago.id, {
         estado: 'Completado',
         horaSalida,
+        duracionMin: duracionReal,
+        monto: montoReal,
+        placa: placaValida,
         fecha,
         timestamp: ahora.getTime()
       });
@@ -585,10 +671,11 @@ export class PagosComponent implements OnInit, OnDestroy {
       // 2. Finalizar la estancia (cajón a Libre, estancia a FINALIZADA).
       if (pago.estanciaId && pago.cajonId) {
         await this.fb.finalizarEstanciaAdmin(pago.estanciaId, pago.cajonId);
+      } else if (pago.cajonId) {
+        await this.fb.finalizarEstanciaPorCajon(pago.cajonId);
       }
 
       // 3. Ejecutar la secuencia de salida del motor para ese cajón.
-      const cajon = this.cajones.find(c => c.id === pago.cajonId);
       if (cajon?.secuenciaSalidaId) {
         const pasos = await this.fb.fetchPasosSecuencia(cajon.secuenciaSalidaId);
         if (pasos.length > 0) {
@@ -607,7 +694,7 @@ export class PagosComponent implements OnInit, OnDestroy {
         fecha,
         timestamp: ahora.getTime(),
         placa: pago.placa || '',
-        duracionMin: pago.duracionMin
+        duracionMin: duracionReal
       };
       await this.fb.addActividad(actividad);
 
@@ -638,32 +725,41 @@ export class PagosComponent implements OnInit, OnDestroy {
 
   // ── Helpers de visualización ──────────────────────────────────────────────
   displayCajon(cj: Cajon): string {
+    const hEnt   = this.getHoraEntradaCajon(cj);
+    const entStr = hEnt ? ` (${hEnt})` : '';
     const tiempo = this.tiempoTextoCajon(cj);
     const monto  = this.montoCajon(cj);
-    const placa  = cj.placa ? ` · ${cj.placa}` : '';
-    return `Nivel ${cj.nivel} · Cajón ${cj.numeroCajon}${placa} — ${tiempo} — $${monto}`;
+    const placaVal = this.getPlacaCajon(cj);
+    const placaStr = placaVal !== '—' ? ` · ${placaVal}` : '';
+    return `Nivel ${cj.nivel} · Cajón ${cj.numeroCajon}${placaStr}${entStr} — ${tiempo} — $${monto}`;
   }
 
   tiempoTextoCajon(cj: Cajon): string {
-    if (!cj.horaEntrada) return '—';
-    const [h, m] = cj.horaEntrada.split(':').map(Number);
-    const entrada = new Date(this.tiempoAhora);
-    entrada.setHours(h, m, 0, 0);
-    const mins = Math.max(0, Math.round((this.tiempoAhora.getTime() - entrada.getTime()) / 60000));
+    const horaEntrada = this.getHoraEntradaCajon(cj);
+    if (!horaEntrada) return '—';
+    const mins = calcularMinutosEstacionado(horaEntrada, this.tiempoAhora);
     return this.formatTiempo(mins);
   }
 
   montoCajon(cj: Cajon): number {
-    if (!cj.horaEntrada) return this.tarifaPorHora;
-    const [h, m] = cj.horaEntrada.split(':').map(Number);
-    const entrada = new Date(this.tiempoAhora);
-    entrada.setHours(h, m, 0, 0);
-    const mins = Math.max(0, Math.round((this.tiempoAhora.getTime() - entrada.getTime()) / 60000));
-    return Math.ceil(Math.max(1, Math.ceil(mins / 60))) * this.tarifaPorHora;
+    const horaEntrada = this.getHoraEntradaCajon(cj);
+    if (!horaEntrada) return this.tarifaPorHora;
+    const mins = calcularMinutosEstacionado(horaEntrada, this.tiempoAhora);
+    return calcularMontoCobro(mins, this.tarifaPorHora);
   }
 
   private formatTiempo(min: number): string {
     if (min < 60) return `${min} min`;
+    if (min >= 1440) {
+      const d = Math.floor(min / 1440);
+      const restoMins = min % 1440;
+      const h = Math.floor(restoMins / 60);
+      const m = restoMins % 60;
+      let text = `${d} ${d === 1 ? 'día' : 'días'}`;
+      if (h > 0) text += ` ${h}h`;
+      if (m > 0) text += ` ${m}m`;
+      return text;
+    }
     const h = Math.floor(min / 60);
     const m = min % 60;
     return m > 0 ? `${h}h ${m}m` : `${h}h`;
@@ -680,12 +776,14 @@ export class PagosComponent implements OnInit, OnDestroy {
       const fecha      = ahora.toISOString().slice(0, 10);
       const folio      = `KP-${fecha.replace(/-/g, '')}-${Math.random().toString(36).slice(-4).toUpperCase()}`;
 
+      const placaValida = this.getPlacaCajon(cj);
+      const horaEntradaValida = this.horaEntradaManual || this.getHoraEntradaCajon(cj) || '—';
       const pago: Pago = {
         folio,
         cajonId:          cj.id,
         cajonDescripcion: `Nivel ${cj.nivel} · Cajón ${cj.numeroCajon}`,
-        placa:            cj.placa || '—',
-        horaEntrada:      cj.horaEntrada || '—',
+        placa:            placaValida,
+        horaEntrada:      horaEntradaValida,
         horaSalida,
         duracionMin:      this.tiempoEstacionadoMin,
         monto:            this.montoCalculado,
@@ -695,16 +793,45 @@ export class PagosComponent implements OnInit, OnDestroy {
         timestamp:        ahora.getTime()
       };
 
-      await this.fb.addPago(pago);
+      // Si existe un pago pendiente en caja creado desde la app para este cajón, se actualiza
+      const pagoPendiente = this.pagos.find(p => p.cajonId === cj.id && p.estado === 'PendienteCaja');
+
+      let finalFolio = folio;
+      if (pagoPendiente?.id) {
+        finalFolio = pagoPendiente.folio || folio;
+        pago.folio = finalFolio;
+        await this.fb.updatePago(pagoPendiente.id, {
+          estado: 'Completado',
+          horaSalida,
+          duracionMin: this.tiempoEstacionadoMin,
+          monto: this.montoCalculado,
+          metodo: this.metodoPago,
+          placa: placaValida,
+          fecha,
+          timestamp: ahora.getTime()
+        });
+      } else {
+        await this.fb.addPago(pago);
+      }
+
+      await this.fb.finalizarEstanciaPorCajon(cj.id);
       await this.fb.updateCajon(cj.id, { estado: 'Libre', horaEntrada: '', placa: '' });
+
+      // Ejecutar la secuencia de salida del motor si está configurada para ese cajón
+      if (cj.secuenciaSalidaId) {
+        const pasos = await this.fb.fetchPasosSecuencia(cj.secuenciaSalidaId);
+        if (pasos.length > 0) {
+          this.robot.ejecutarPasos(pasos).catch(() => {});
+        }
+      }
 
       const actividad: any = {
         tipo:        'salida',
-        descripcion: `${pago.cajonDescripcion} · Folio ${folio}`,
+        descripcion: `${pago.cajonDescripcion} · Folio ${finalFolio}`,
         hora:        horaSalida,
         fecha,
         timestamp:   ahora.getTime(),
-        placa:       cj.placa || '',
+        placa:       placaValida !== '—' ? placaValida : (cj.placa || ''),
         duracionMin: this.tiempoEstacionadoMin
       };
       await this.fb.addActividad(actividad);
@@ -712,6 +839,7 @@ export class PagosComponent implements OnInit, OnDestroy {
       this.ticketPago          = pago;
       this.mostrarTicket       = true;
       this.cajonSeleccionadoId = '';
+      this.horaEntradaManual   = '';
       this.metodoPago          = 'Efectivo';
     } catch (e) {
       console.error('Error al registrar pago:', e);
@@ -768,7 +896,7 @@ export class PagosComponent implements OnInit, OnDestroy {
   <div class="row"><span>Fecha:</span><strong>${pago.fecha}</strong></div>
   <div class="row"><span>Entrada:</span><strong>${pago.horaEntrada}</strong></div>
   <div class="row"><span>Salida:</span><strong>${pago.horaSalida || '—'}</strong></div>
-  <div class="row"><span>Duración:</span><strong>${pago.duracionMin || 0} min</strong></div>
+  <div class="row"><span>Duración:</span><strong>${this.getDuracionMin(pago)} min</strong></div>
   <div class="row"><span>Método:</span><strong>${pago.metodo}</strong></div>
 
   <div class="total">
